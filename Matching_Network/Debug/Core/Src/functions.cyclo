@@ -1,0 +1,5 @@
+../Core/Src/functions.c:19:6:Motor1DriveDirection	1
+../Core/Src/functions.c:26:6:Motor1DriveReverseDirection	1
+../Core/Src/functions.c:33:6:Motor2DriveDirection	1
+../Core/Src/functions.c:39:6:Motor2DriveReverseDirection	1
+../Core/Src/functions.c:46:5:Lag	3
