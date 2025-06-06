@@ -13,11 +13,11 @@
 		<item key="org.eclipse.ui.internal.quickaccess.QuickAccessDialogDIALOG_USE_PERSISTED_SIZE" value="true"/>
 		<item key="org.eclipse.ui.internal.quickaccess.QuickAccessDialogDIALOG_USE_PERSISTED_LOCATION" value="false"/>
 		<list key="orderedElements">
-			<item value="org.eclipse.ui.window.preferences(preferencePageId=org.eclipse.userstorage.ui.oauth.credentials)"/>
+			<item value="search.in.help"/>
 			<item value="org.eclipse.ui.window.preferences"/>
 		</list>
 		<list key="orderedProviders">
-			<item value="org.eclipse.ui.commands"/>
+			<item value="search.help"/>
 			<item value="org.eclipse.ui.commands"/>
 		</list>
 		<list key="textEntries">
@@ -25,7 +25,7 @@
 			<item value="2"/>
 		</list>
 		<list key="textArray">
-			<item value="account"/>
+			<item value="hal_nvic"/>
 			<item value="prefere"/>
 			<item value="pre"/>
 		</list>
