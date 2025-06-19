@@ -1,0 +1,454 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <string.h>
+#include "u8g2.h"
+#include "u8g2_stm32.h"
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
+UART_HandleTypeDef huart2;
+
+/* USER CODE BEGIN PV */
+int __io_putchar(int ch)
+{
+  // Send one character via the configured UART
+  // The HAL_MAX_DELAY ensures the function waits until the transmission is complete
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
+#define NUM_PARAMETERS 24
+float parameters[NUM_PARAMETERS] = {0.0f};
+
+const char* parameter_names_for_reference[NUM_PARAMETERS] = {
+    "X1 Time Min->Max", "X1 Time Max->Min", "X2 Time Min->Max", "X2 Time Max->Min",
+    "X1 +15V I Min->Max", "X1 -15V I Min->Max", "X1 +24V I Min->Max",
+    "X1 +15V I Max->Min", "X1 -15V I Max->Min", "X1 +24V I Max->Min",
+    "X2 +15V I Min->Max", "X2 -15V I Min->Max", "X2 +24V I Min->Max",
+    "X2 +15V I Max->Min", "X2 -15V I Max->Min", "X2 +24V I Max->Min",
+    "X1 Min Pos V", "X1 Max Pos V", "X2 Min Pos V", "X2 Max Pos V",
+    "X1 Step Min->Max", "X1 Step Max->Min", "X2 Step Min->Max", "X2 Step Max->Min"
+};
+static u8g2_t u8g2;
+#define DATA_LOG_LENGTH 32
+
+uint32_t data_log[DATA_LOG_LENGTH] = {
+    101,
+    255,
+    1024,
+    7,
+    33000,
+    65535,
+    12345,
+    9876,
+    5,
+    4095,
+    8192,
+    16384,
+    32768,
+    64001,
+    128,
+    2048,
+    99999,
+    1,
+    0,
+    123,
+    4567,
+    891011,
+    121314,
+    555,
+    7777,
+    88,
+    42,
+    1000000,
+    2500,
+    1337,
+    54321,
+    999
+};
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_USART2_UART_Init(void);
+/* USER CODE BEGIN PFP */
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+
+PUTCHAR_PROTOTYPE
+{
+  // Change HUART2 to the UART handle you are using
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+extern char display_buffer[200];
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+  u8g2_Setup_sh1106_i2c_128x64_noname_f(
+      &u8g2,
+      U8G2_R0,
+      u8x8_byte_i2c_stm32,
+      u8g2_gpio_and_delay_stm32
+  );
+
+  u8g2_InitDisplay(&u8g2);
+  u8g2_SetPowerSave(&u8g2, 0); // wake up display
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+	  /*Code for Checking demo of Display
+	    u8g2_ClearBuffer(&u8g2); // Clear the internal memory buffer
+
+	    //--- Drawing Code ---
+	    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr); // Choose a nice, big font
+	    u8g2_DrawStr(&u8g2, 1, 18, "It Works!"); // Draw a string
+
+	    u8g2_SetFont(&u8g2, u8g2_font_6x10_tf);
+	    u8g2_DrawStr(&u8g2, 0, 40, "Driver: SH1106");
+	    u8g2_DrawStr(&u8g2, 0, 55, "Addr: 0x78");
+	    //--------------------
+
+	    u8g2_SendBuffer(&u8g2); // Transfer the buffer to the display
+
+	    HAL_Delay(2000);
+	    */
+	  // The number of items to display on the screen at once
+	    printf("Hello from my STM32 board! Time: %lu\n", HAL_GetTick());
+	    fflush(stdout); // Don't forget to flush the buffer
+	    HAL_Delay(1000); // Send the message once per second
+
+	      const int items_per_page = 3;
+
+	      // Loop through the entire data_log array, taking 'items_per_page' at a time
+	      for (int page_start_index = 0; page_start_index < DATA_LOG_LENGTH; page_start_index += items_per_page)
+	      {
+	          // 1. Clear the buffer
+	          u8g2_ClearBuffer(&u8g2);
+
+	          // 2. Set the font
+	          u8g2_SetFont(&u8g2, u8g2_font_profont12_tr);
+
+	          // 3. Display a title for the current page
+	          char title_buffer[200];
+	          snprintf(title_buffer, sizeof(title_buffer), "Items %d-%d", page_start_index, page_start_index + items_per_page - 1);
+	          u8g2_DrawStr(&u8g2, 10, 12, title_buffer);
+	          u8g2_DrawHLine(&u8g2, 0, 15, 128); // Draw a line under the title
+
+	          // 4. Loop through the items for the current page
+	          for (int i = 0; i < items_per_page; i++)
+	          {
+	              int current_index = page_start_index + i;
+
+	              // Make sure we don't read past the end of the array
+	              if (current_index < DATA_LOG_LENGTH)
+	              {
+	                  char display_buffer[25]; // Buffer for the line
+
+	                  // Use "%lu" to format a uint32_t (long unsigned)
+	                  sprintf(display_buffer, "#%02d: %lu", current_index, data_log[current_index]);
+
+	                  // Calculate Y position, starting below the title line
+	                  int y_position = 30 + (i * 10);
+	                  u8g2_DrawStr(&u8g2, 5, y_position, display_buffer);
+	              }
+	          }
+
+	          // 5. Send the buffer to the display
+	          u8g2_SendBuffer(&u8g2);
+
+	          // 6. Wait before showing the next page
+	          HAL_Delay(3000); // Show each page for 3 seconds
+	      }
+	      // --- SIMULATE REAL-TIME DATA ---
+	      // In your final code, you will replace this with actual sensor readings
+	      // and measurements for each of the 24 parameters.
+	      parameters[0] = 3.20 + (HAL_GetTick() % 100) / 1000.0f; // X1 Time Min->Max
+	      parameters[1] = 3.10 + (HAL_GetTick() % 100) / 1000.0f; // X1 Time Max->Min
+	      parameters[2] = 3.30 + (HAL_GetTick() % 100) / 1000.0f; // X2 Time Min->Max
+	      parameters[3] = 3.40 + (HAL_GetTick() % 100) / 1000.0f; // X2 Time Max->Min
+	      parameters[4] = 0.13 + (HAL_GetTick() % 100) / 2000.0f; // X1 +15V I Min->Max
+	      parameters[5] = 0.10 + (HAL_GetTick() % 100) / 2000.0f; // X1 -15V I Min->Max
+	      // ... Fill in the rest of the 24 parameters with real or simulated data
+	      for (int i = 6; i < NUM_PARAMETERS; i++) {
+	          parameters[i] = (float)i + ((HAL_GetTick() % 1000) / 1000.0f);
+	      }
+
+
+	      // --- Print All 24 Parameters as a Single CSV Row ---
+	      // The Python GUI expects a line starting with "DATA," followed by
+	      // the 24 measured values, separated by commas.
+	      printf("DATA,");
+	      for (int i = 0; i < NUM_PARAMETERS; i++) {
+	    	  printf("%ld", (int32_t)(parameters[i] * 1000.0f)); // Using .3f for 3 decimal places
+	          if (i < NUM_PARAMETERS - 1) {
+	              printf(",");
+	          }
+	      }
+	      printf("\n"); // End of data line
+	      fflush(stdout); // Ensure data is sent immediately
+
+
+
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 84;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 400000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+
+  /* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  /* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */

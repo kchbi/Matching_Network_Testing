@@ -1,4 +1,4 @@
-17:13:37 **** Build of configuration Debug for project I2c Comm ****
+11:39:18 **** Build of configuration Debug for project I2c Comm ****
 make -j12 all 
 arm-none-eabi-gcc "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.d" -MT"Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o"
 arm-none-eabi-gcc "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.d" -MT"Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o"
@@ -50,17 +50,20 @@ arm-none-eabi-gcc "../Core/Src/system_stm32f4xx.c" -mcpu=cortex-m4 -std=gnu11 -g
   128 |           printf("Hello World \n");
       |           ^~~~~~
 ../Core/Src/main.c:128:11: note: include '<stdio.h>' or provide a declaration of 'printf'
-arm-none-eabi-gcc -o "I2c Comm.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\Desktop\Stm32\I2c Comm\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="I2c Comm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+arm-none-eabi-gcc -o "I2c Comm.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\I2c Comm\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="I2c Comm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 Finished building target: I2c Comm.elf
  
 arm-none-eabi-size  I2c\ Comm.elf 
 arm-none-eabi-objdump -h -S I2c\ Comm.elf  > "I2c Comm.list"
+arm-none-eabi-objcopy  -O ihex I2c\ Comm.elf  "I2c Comm.hex"
    text	   data	    bss	    dec	    hex	filename
   12164	    120	   1992	  14276	   37c4	I2c Comm.elf
 Finished building: default.size.stdout
  
+Finished building: I2c Comm.hex
 Finished building: I2c Comm.list
  
+ 
 
-17:13:40 Build Finished. 0 errors, 6 warnings. (took 3s.416ms)
+11:39:20 Build Finished. 0 errors, 6 warnings. (took 2s.699ms)
 

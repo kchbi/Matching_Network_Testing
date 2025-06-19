@@ -118,6 +118,22 @@ int main(void)
 //	    // Wait for 2nd conversion to complete
 //	    HAL_ADC_PollForConversion(&hadc1, 100); // Poll for Rank 2
 //	    adc_val_ch2 = HAL_ADC_GetValue(&hadc1);
+	  if (Pot1_2[1] < 30)
+	  {
+		  printf("Motor 1 should be moved Clockwise \n");
+	  }
+	  else if(Pot1_2[1] > 4000)
+	  {
+		  printf("Motor 1 Should be Moved Anticlockwise \n");
+
+	  }
+	  else
+	  {
+		  printf("Motor is Moving towards an Extreme End \n");
+
+	  }
+	  HAL_Delay(100);
+
 //
 //	    // Stop the ADC to reset the sequence for the next loop iteration
 //	    HAL_ADC_Stop(&hadc1);
@@ -227,9 +243,8 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_2; // <-- ADD THIS MISSING LINE
+  sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = 2;
-  // SamplingTime does not need to be set again as it is still 480 from before, but setting the Channel is essential.
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();

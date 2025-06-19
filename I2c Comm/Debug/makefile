@@ -52,6 +52,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 I2c\ Comm.list \
 
+OBJCOPY_HEX += \
+I2c\ Comm.hex \
+
 
 # All Target
 all: main-build
@@ -60,8 +63,8 @@ all: main-build
 main-build: I2c\ Comm.elf secondary-outputs
 
 # Tool invocations
-I2c\ Comm.elf I2c\ Comm.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\Desktop\Stm32\I2c\ Comm\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "I2c Comm.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\Desktop\Stm32\I2c Comm\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="I2c Comm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+I2c\ Comm.elf I2c\ Comm.map: $(OBJS) $(USER_OBJS) C:\Users\adity\Desktop\git\Matching_Network_Testing\I2c\ Comm\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "I2c Comm.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\I2c Comm\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="I2c Comm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,12 +78,17 @@ I2c\ Comm.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+I2c\ Comm.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "I2c Comm.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) I2c\ Comm.elf I2c\ Comm.list I2c\ Comm.map I2c\\ Comm.elf default.size.stdout
+	-$(RM) I2c\ Comm.elf I2c\ Comm.hex I2c\ Comm.list I2c\ Comm.map I2c\\ Comm.elf default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

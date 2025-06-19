@@ -1,96 +1,53 @@
-02:21:38 **** Incremental Build of configuration Debug for project ADC_DMA ****
+23:18:29 **** Incremental Build of configuration Debug for project OLED ****
 make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I"C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2" -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
 ../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:103:21: warning: unused variable 'ret1' [-Wunused-variable]
-  103 |   HAL_StatusTypeDef ret1 = HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
-      |                     ^~~~
-arm-none-eabi-gcc -o "ADC_DMA.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\ADC_DMA\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC_DMA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: ADC_DMA.elf
+../Core/Src/main.c:162:32: warning: passing argument 2 of 'HAL_UART_Receive_IT' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+  162 |   HAL_UART_Receive_IT(&huart2, &uart_rx_byte, 1);
+      |                                ^~~~~~~~~~~~~
+In file included from ../Core/Inc/stm32f4xx_hal_conf.h:411,
+                 from ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:748:75: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
+  748 | HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
+      |                                                                  ~~~~~~~~~^~~~~
+../Core/Src/main.c:257:53: warning: implicit declaration of function 'fabsf' [-Wimplicit-function-declaration]
+  257 |                 int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
+      |                                                     ^~~~~
+../Core/Src/main.c:28:1: note: include '<math.h>' or provide a declaration of 'fabsf'
+   27 | #include "u8g2_stm32.h"
+  +++ |+#include <math.h>
+   28 | 
+../Core/Src/main.c:257:53: warning: incompatible implicit declaration of built-in function 'fabsf' [-Wbuiltin-declaration-mismatch]
+  257 |                 int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
+      |                                                     ^~~~~
+../Core/Src/main.c:257:53: note: include '<math.h>' or provide a declaration of 'fabsf'
+../Core/Src/main.c: In function 'HAL_UART_RxCpltCallback':
+../Core/Src/main.c:461:36: warning: passing argument 2 of 'HAL_UART_Receive_IT' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+  461 |         HAL_UART_Receive_IT(huart, &uart_rx_byte, 1);
+      |                                    ^~~~~~~~~~~~~
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:748:75: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
+  748 | HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
+      |                                                                  ~~~~~~~~~^~~~~
+arm-none-eabi-gcc -o "OLED.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\OLED\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="OLED.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: OLED.elf
  
-arm-none-eabi-size  ADC_DMA.elf 
-arm-none-eabi-objdump -h -S ADC_DMA.elf  > "ADC_DMA.list"
+arm-none-eabi-size  OLED.elf 
+arm-none-eabi-objdump -h -S OLED.elf  > "OLED.list"
    text	   data	    bss	    dec	    hex	filename
-  11848	     12	   1748	  13608	   3528	ADC_DMA.elf
+  32044	    104	   3440	  35588	   8b04	OLED.elf
+arm-none-eabi-objcopy  -O ihex OLED.elf  "OLED.hex"
 Finished building: default.size.stdout
  
-Finished building: ADC_DMA.list
+Finished building: OLED.hex
  
-02:21:42 **** Incremental Build of configuration Debug for project ADC_DMA ****
+Finished building: OLED.list
+ 
+23:36:15 **** Incremental Build of configuration Debug for project OLED ****
 make -j12 all 
-arm-none-eabi-size  ADC_DMA.elf 
+arm-none-eabi-size  OLED.elf 
    text	   data	    bss	    dec	    hex	filename
-  11848	     12	   1748	  13608	   3528	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-02:23:39 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "ADC_DMA.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\ADC_DMA\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC_DMA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: ADC_DMA.elf
- 
-arm-none-eabi-size  ADC_DMA.elf 
-arm-none-eabi-objdump -h -S ADC_DMA.elf  > "ADC_DMA.list"
-   text	   data	    bss	    dec	    hex	filename
-  10728	     12	   1740	  12480	   30c0	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-Finished building: ADC_DMA.list
- 
-02:30:45 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:103:21: warning: unused variable 'ret1' [-Wunused-variable]
-  103 |   HAL_StatusTypeDef ret1 = HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
-      |                     ^~~~
-arm-none-eabi-gcc -o "ADC_DMA.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\ADC_DMA\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC_DMA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: ADC_DMA.elf
- 
-arm-none-eabi-size  ADC_DMA.elf 
-arm-none-eabi-objdump -h -S ADC_DMA.elf  > "ADC_DMA.list"
-   text	   data	    bss	    dec	    hex	filename
-  11852	     12	   1748	  13612	   352c	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-Finished building: ADC_DMA.list
- 
-02:32:44 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:103:21: warning: unused variable 'ret1' [-Wunused-variable]
-  103 |   HAL_StatusTypeDef ret1 = HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
-      |                     ^~~~
-arm-none-eabi-gcc -o "ADC_DMA.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\ADC_DMA\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADC_DMA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: ADC_DMA.elf
- 
-arm-none-eabi-size  ADC_DMA.elf 
-arm-none-eabi-objdump -h -S ADC_DMA.elf  > "ADC_DMA.list"
-   text	   data	    bss	    dec	    hex	filename
-  10880	     12	   1740	  12632	   3158	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-Finished building: ADC_DMA.list
- 
-02:33:33 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-size  ADC_DMA.elf 
-   text	   data	    bss	    dec	    hex	filename
-  10880	     12	   1740	  12632	   3158	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-02:33:43 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-size  ADC_DMA.elf 
-   text	   data	    bss	    dec	    hex	filename
-  10880	     12	   1740	  12632	   3158	ADC_DMA.elf
-Finished building: default.size.stdout
- 
-02:34:06 **** Incremental Build of configuration Debug for project ADC_DMA ****
-make -j12 all 
-arm-none-eabi-size  ADC_DMA.elf 
-   text	   data	    bss	    dec	    hex	filename
-  10880	     12	   1740	  12632	   3158	ADC_DMA.elf
+  32044	    104	   3440	  35588	   8b04	OLED.elf
 Finished building: default.size.stdout
  

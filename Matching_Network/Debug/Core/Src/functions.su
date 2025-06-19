@@ -1,5 +1,5 @@
-../Core/Src/functions.c:19:6:Motor1DriveDirection	16	static
-../Core/Src/functions.c:26:6:Motor1DriveReverseDirection	16	static
-../Core/Src/functions.c:33:6:Motor2DriveDirection	16	static
-../Core/Src/functions.c:39:6:Motor2DriveReverseDirection	16	static
-../Core/Src/functions.c:46:5:Lag	24	static
+../Core/Src/functions.c:28:6:motor2_set_state	16	static
+../Core/Src/functions.c:54:6:motor1_set_state	16	static
+../Core/Src/functions.c:93:6:moveMotor2ToADCValue	32	static
+../Core/Src/functions.c:136:6:moveMotor1ToADCValue	32	static
+../Core/Src/functions.c:175:5:Lag	32	static

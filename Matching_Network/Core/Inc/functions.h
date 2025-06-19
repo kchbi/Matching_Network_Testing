@@ -8,12 +8,28 @@
 #ifndef INC_FUNCTIONS_H_
 #define INC_FUNCTIONS_H_
 
-extern uint32_t speed ;
-extern uint32_t Potentiometer1_data[1];
-extern uint32_t Potentiometer2_data[1];
-void Motor1DriveDirection(uint32_t speed);
-void Motor2DriveDirection(uint32_t speed);
-void Motor1DriveReverseDirection(uint32_t speed);
-void Motor2DriveReverseDirection(uint32_t speed);
+// In motor.h
+#include <stdbool.h>
+typedef enum {
+    MOTOR_STOP,
+    MOTOR_FORWARD,
+    MOTOR_REVERSE
+} MotorDirection_t;
+void motor2_set_state(MotorDirection_t direction, uint32_t speed);
+void motor1_set_state(MotorDirection_t direction, uint32_t speed);
+extern uint32_t speed;
+extern volatile uint16_t Pot1_2[2];
+extern uint32_t Direction_Number;
+extern uint32_t lagtime1, lagtime2;
+extern uint16_t lag_tolerance ;
+extern uint32_t Motor2_Start ;
+extern uint32_t Motor2_End ;
+extern uint32_t time_taken;
+extern void Motor1DriveDirection(uint32_t speed);
+extern void Motor2DriveDirection(uint32_t speed);
+extern void Motor1DriveReverseDirection(uint32_t speed);
+extern void Motor2DriveReverseDirection(uint32_t speed);
+extern void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance);
+extern void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance);
 
 #endif /* INC_FUNCTIONS_H_ */

@@ -7,150 +7,216 @@
 #include "stm32f4xx_hal.h"     // Main HAL header (includes GPIO, TIM, etc.)
 #include "main.h"
 #include "functions.h"// Usually contains GPIO pin mappings and handles
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #define MOTOR1_IN1 GPIO_PIN_7
 #define MOTOR1_IN2 GPIO_PIN_8
 #define MOTOR2_IN1 GPIO_PIN_9
-#define MOTOR2_IN2 GPIO_PIN_10
-uint32_t speed = 170;
+#define MOTOR2_IN2 GPIO_PIN_11
+uint32_t speed = 115;
+uint32_t Motor2_Start ;
+uint32_t Motor2_End ;
+uint32_t time_taken;
 uint32_t TIMEOUT_VALUE = 1000 ;
-uint32_t Potentiometer1_data[1];
-uint32_t Potentiometer2_data[1];
+uint16_t volatile Pot1_2[2];
+#define PWM_MAX_DUTY (200)
+uint32_t lagtime1 = 0, lagtime2 = 0;
+uint16_t lag_tolerance = 100;
 
-void Motor1DriveDirection(uint32_t speed)
+
+void motor2_set_state(MotorDirection_t direction, uint32_t speed)
 {
-    HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
-    TIM1->CCR1 = speed;
-}
-
-void Motor1DriveReverseDirection(uint32_t speed)
-{
-    HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
-    TIM1->CCR1 = speed;
-}
-
-void Motor2DriveDirection(uint32_t speed) {
-    HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
-    TIM2->CCR1 = speed;
-}
-
-void Motor2DriveReverseDirection(uint32_t speed)
-{
-    HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
-    TIM2->CCR1 = speed;
-}
-
-int Lag(void)
-{
-    // Start the motor
-    MotorMotor1DriveDirection1(170);
-    uint32_t start_time_motor = HAL_GetTick();
-
-    // Store initial potentiometer position
-    uint32_t init_position = Potentiometer1_data[0];
-
-    // Wait for a change in potentiometer reading
-    while ((Potentiometer1_data[0] - init_position) < 5) {
-        // Optionally add a timeout mechanism to avoid infinite loop
-        if ((HAL_GetTick() - start_time_motor) > TIMEOUT_VALUE) {
-            return -1; // Indicate timeout
-        }
+    if (speed > PWM_MAX_DUTY) {
+        speed = PWM_MAX_DUTY;
     }
 
-    uint32_t start_time_pot = HAL_GetTick();
-    uint32_t lagtime = start_time_pot - start_time_motor;
-    return lagtime;
+    switch (direction) {
+        case MOTOR_FORWARD:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
+            TIM2->CCR1 = speed;
+            break;
+
+        case MOTOR_REVERSE:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+            TIM2->CCR1 = speed;
+            break;
+
+        case MOTOR_STOP:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+            TIM2->CCR1 = speed;
+            break;
+    }
+}
+void motor1_set_state(MotorDirection_t direction, uint32_t speed)
+{
+    // Clamp the speed to the maximum possible value to prevent overflow
+    if (speed > PWM_MAX_DUTY) {
+        speed = PWM_MAX_DUTY;
+    }
+
+    switch (direction) {
+        case MOTOR_FORWARD:
+
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
+            TIM1->CCR1 = speed;// Set PWM duty cycle
+
+            break;
+
+        case MOTOR_REVERSE:
+
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+            TIM1->CCR1 = speed; // Set PWM duty cycle
+            break;
+
+        case MOTOR_STOP:
+
+            // This implements an active "brake" by setting both inputs high.
+            // Setting both low would "coast". Brake is better for position control.
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+            TIM1->CCR1 = speed; // Ensure motor power is off
+            break;
+    }
 }
 
 /**
-* @brief  Gets adc data from ADS7828
-* @param  address ADS7828 address set by A0 and A1 pins(default:00 = 0x48)
-* @param  pinCfg configuration of SD and C[2..0] bits for
-* 				input pin selection
-* 				SD: 0 for differential, 1 for single ended
-* 				C[2..0] input pin configuration
-* 				by default, internal reference and ADC is turned on(bits PD[1..0])
-* @param	adcdata pointer to target memory for adc data
-* @retval HAL status
-*/
-HAL_StatusTypeDef ADS7828_readADC(uint8_t address, uint8_t pinCfg, uint16_t *adcdata)
-{
-	HAL_StatusTypeDef ret;
-	uint8_t addata[2];
+ * @brief Moves Motor 2 to a specific target ADC value.
+ * @param targetADC: The desired raw ADC value (0-4095).
+ * @param tolerance: How close is "close enough" in ADC units.
+ */
+void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance) {
+    uint16_t currentADC;
+    int32_t error; // <<< FIX #1: MUST BE A SIGNED TYPE (int32_t is safest)
 
-	// Send configuration register data
-	ret = HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)(address<<1), &pinCfg, 1, 50);
-	if(ret != HAL_OK)
-	{
-		return ret;
-	}
+    uint32_t timeout_start = HAL_GetTick();
 
-	for(int i=0; i<5000; i++);
+    while (1) {
+        currentADC = Pot1_2[1]; // Correct channel for Motor 2
 
-	// Receive voltage data, two bytes
-	ret = HAL_I2C_Master_Receive(&hi2c1, (uint16_t)(address<<1)|0x01, addata, 2, 50);
-	if(ret != HAL_OK)
-	{
-		return ret;
-	}
+        // FIX #2: Perform a signed subtraction by casting
+        error = (int32_t)targetADC - (int32_t)currentADC;
 
-	// Assemble adc reading data from two bytes
-	*adcdata = ((addata[0] & 0x0F) << 8) | addata[1];
-	return HAL_OK;
+        // FIX #3: Use correct printf specifiers for the data types
+        printf("M2 Target: %u, Current: %u, Error: %ld\n", targetADC, currentADC, error);
+
+        // This check is now correct because 'error' can be negative
+        if (labs(error) <= tolerance){
+            motor2_set_state(MOTOR_STOP, speed); // Correctly stops motor 2
+            printf("M2 Target reached.\n");
+            return ;
+        }
+
+        if (error > 0) {
+            motor2_set_state(MOTOR_FORWARD, speed); //state which increases the value
+        } else {
+            motor2_set_state(MOTOR_REVERSE, speed);
+        }
+
+        if (HAL_GetTick() - timeout_start > 5000) {
+            // FIX #4: Use the specific motor stop function
+            motor2_set_state(MOTOR_STOP, speed);
+            printf("Error: moveMotor2ToADCValue timed out!\n");
+            return ;
+        }
+
+        HAL_Delay(10);
+    }
 }
-
 /**
-* @brief  Get temperature from MAX30205
-* @param  dev_address MAX30205 address set by A0,A1, A2 pins
-* 				datasheet provides 8bit address, therefore no need
-* 				to left shift in i2c functions (default=000 or 0x90 = (0x48 <<1))
-* @param  config configuration register for MAX30205 (size 8b)
-* 				configuration register address is 0x01
-* @param	temp pointer to target memory for temperature data
-* @retval HAL status
-*/
-HAL_StatusTypeDef MAX30205_readTemp(uint8_t dev_address, uint8_t config, float *temp)
-{
-	HAL_StatusTypeDef ret;
-	uint8_t tempData[2];
+ * @brief Moves Motor 1 to a specific target ADC value.
+ * @param targetADC: The desired raw ADC value (0-4095).
+ * @param tolerance: How close is "close enough" in ADC units.
+ */
+void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance) {
+    uint16_t currentADC;
+    int32_t error; // <<< FIX #1: MUST BE A SIGNED TYPE (int32_t is safest)
 
-	// Send configuration, reg 1
-	ret = HAL_I2C_Mem_Write(&hi2c1, (uint16_t)(dev_address), 0x01, 1, &config, 1, 50);
-	if(ret != HAL_OK)
-	{
-		return ret;
-	}
+    uint32_t timeout_start = HAL_GetTick();
 
-	for(int i=0; i<5000; i++);
+    while (1) {
+        currentADC = Pot1_2[0]; // Correct channel for Motor 2
 
-	// Get temperature data, reg 0, two bytes
-	ret = HAL_I2C_Mem_Read(&hi2c1, (uint16_t)(dev_address) |0x01, 0x00, 1, tempData, 2, 50);
-	if(ret != HAL_OK)
-	{
-		return ret;
-	}
+        // FIX #2: Perform a signed subtraction by casting
+        error = (int32_t)targetADC - (int32_t)currentADC;
 
-	// Convert to temperature
-	// Datasheet shows that digits are powers of two in temperature degree C
-	*temp = ( (tempData[0] << 8) | tempData[1]) *0.00390625;
+        // FIX #3: Use correct printf specifiers for the data types
+        printf("M1 Target: %u, Current: %u, Error: %ld\n", targetADC, currentADC, error);
 
-	return HAL_OK;
+        // This check is now correct because 'error' can be negative
+        if (labs(error) <= tolerance){
+            motor1_set_state(MOTOR_STOP, speed); // Correctly stops motor 2
+            printf("M1 Target reached.\n");
+            return;
+        }
+
+        if (error > 0) {
+            motor1_set_state(MOTOR_FORWARD, speed);
+        } else {
+            motor1_set_state(MOTOR_REVERSE, speed);
+        }
+
+        if (HAL_GetTick() - timeout_start > 5000) {
+            // FIX #4: Use the specific motor stop function
+            motor1_set_state(MOTOR_STOP, speed);
+            printf("Error: moveMotor1ToADCValue timed out!\n");
+            return;
+        }
+
+        HAL_Delay(10);
+    }
 }
 
-/**
-* @brief  Convert adc 16bit value to float voltage
-* @param	vref reference voltage of adc(internal?)
-* @param  adcval  value of adc to convert
-* @param  voltage converted adc value
-* @retval HAL status
-*/
-void adc_toVolt(float vref, uint8_t res, uint16_t adcval, float *voltage)
+int Lag(uint32_t *lagtime)
 {
-	*voltage = adcval * vref / (float)((1<<res) -1);
+//    // Start the motor 1
+//	 motor1_set_state(MOTOR_FORWARD, speed);
+//    uint32_t start_time_motor1 = HAL_GetTick();
+//
+//    // Store initial potentiometer position
+//    uint32_t init_position = Pot1_2[0];
+//
+//    // Wait for a change in potentiometer reading
+//    while (labs((int32_t)(Pot1_2[0] - init_position)) < 5) {
+//        // Optionally add a timeout mechanism to avoid infinite loop
+//        if ((HAL_GetTick() - start_time_motor1) > TIMEOUT_VALUE) {
+//        	printf("Error in Calculating Lag for Motor 1  \n");
+//            return -1; // Indicate timeout
+//        }
+//        HAL_Delay(1); // or __NOP();
+//    }
+//
+//    uint32_t start_time_pot1 = HAL_GetTick();
+//    *lagtime1 = start_time_pot1 - start_time_motor1;
+    // Start the motor 2
+	 motor2_set_state(MOTOR_FORWARD, speed);
+    uint32_t start_time_motor2 = HAL_GetTick();
+
+    // Store initial potentiometer position
+    uint32_t init_position = Pot1_2[1];
+
+    // Wait for a change in potentiometer reading
+    while (labs((int32_t)(Pot1_2[1] - init_position)) < (int32_t)(lag_tolerance)) {
+        // Optionally add a timeout mechanism to avoid infinite loop
+        if ((HAL_GetTick() - start_time_motor2) > TIMEOUT_VALUE) {
+        	printf("Error in Calculating Lag for Motor 2  \n");
+            return -1; // Indicate timeout
+        }
+        HAL_Delay(1); // or __NOP();
+    }
+    uint32_t start_time_pot2 = HAL_GetTick();
+    *lagtime = start_time_pot2 - start_time_motor2;
+    motor2_set_state(MOTOR_STOP,speed);
+
+    return 0;
+
 }
+
 
 
 

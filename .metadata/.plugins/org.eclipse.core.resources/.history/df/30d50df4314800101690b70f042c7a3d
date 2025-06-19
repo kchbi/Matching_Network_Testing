@@ -1,0 +1,30 @@
+/*
+ * functions.h
+ *
+ *  Created on: Jun 1, 2025
+ *      Author: adity
+ */
+
+#ifndef INC_FUNCTIONS_H_
+#define INC_FUNCTIONS_H_
+
+// In motor.h
+typedef enum {
+    MOTOR_STOP,
+    MOTOR_FORWARD,
+    MOTOR_REVERSE
+} MotorDirection_t;
+void motor2_set_state(MotorDirection_t direction, uint32_t speed);
+void motor1_set_state(MotorDirection_t direction, uint32_t speed);
+extern uint32_t speed ;
+extern uint16_t Pot1_2[2];
+extern uint32_t Direction_Number;
+extern uint32_t lagtime1, lagtime2;
+extern void Motor1DriveDirection(uint32_t speed);
+extern void Motor2DriveDirection(uint32_t speed);
+extern void Motor1DriveReverseDirection(uint32_t speed);
+extern void Motor2DriveReverseDirection(uint32_t speed);
+extern void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance ,uint32_t speed );
+extern void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance , uint32_t speed);
+
+#endif /* INC_FUNCTIONS_H_ */

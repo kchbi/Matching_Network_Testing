@@ -52,6 +52,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 Matching_Network.list \
 
+OBJCOPY_HEX += \
+Matching_Network.hex \
+
 
 # All Target
 all: main-build
@@ -60,8 +63,8 @@ all: main-build
 main-build: Matching_Network.elf secondary-outputs
 
 # Tool invocations
-Matching_Network.elf Matching_Network.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\Desktop\Stm32\Matching_Network\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\Desktop\Stm32\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Matching_Network.elf Matching_Network.map: $(OBJS) $(USER_OBJS) C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,12 +78,17 @@ Matching_Network.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS
 	@echo 'Finished building: $@'
 	@echo ' '
 
+Matching_Network.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "Matching_Network.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) Matching_Network.elf Matching_Network.list Matching_Network.map default.size.stdout
+	-$(RM) Matching_Network.elf Matching_Network.hex Matching_Network.list Matching_Network.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

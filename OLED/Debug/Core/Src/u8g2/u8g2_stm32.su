@@ -1,0 +1,2 @@
+../Core/Src/u8g2/u8g2_stm32.c:11:9:u8x8_byte_i2c_stm32	40	static
+../Core/Src/u8g2/u8g2_stm32.c:45:9:u8g2_gpio_and_delay_stm32	24	static
