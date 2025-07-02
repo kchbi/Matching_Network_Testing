@@ -30,7 +30,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2.h \
  C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8x8.h \
  C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2_stm32.h \
- C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2.h
+ C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2.h \
+ ../Core/Inc/uart_handler.h ../Core/Inc/main.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -64,3 +65,5 @@ C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2.h:
 C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8x8.h:
 C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2_stm32.h:
 C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2/u8g2.h:
+../Core/Inc/uart_handler.h:
+../Core/Inc/main.h:

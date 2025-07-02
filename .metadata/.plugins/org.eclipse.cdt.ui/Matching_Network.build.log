@@ -1,29 +1,13 @@
-23:42:50 **** Build of configuration Debug for project Matching_Network ****
+12:01:37 **** Incremental Build of configuration Debug for project Matching_Network ****
 make -j12 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:133:3: warning: implicit declaration of function 'Lag' [-Wimplicit-function-declaration]
-  133 |   Lag(&lagtime2);
-      |   ^~~
-../Core/Src/main.c:146:20: warning: unused variable 'time_taken' [-Wunused-variable]
-  146 |           uint32_t time_taken = Motor2_End - Motor2_Start ;
-      |                    ^~~~~~~~~~
-../Core/Src/main.c:128:21: warning: unused variable 'ret3' [-Wunused-variable]
-  128 |   HAL_StatusTypeDef ret3 = HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
-      |                     ^~~~
-../Core/Src/main.c:127:21: warning: unused variable 'ret2' [-Wunused-variable]
-  127 |   HAL_StatusTypeDef ret2 = HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
-      |                     ^~~~
-../Core/Src/main.c:126:21: warning: unused variable 'ret1' [-Wunused-variable]
-  126 |   HAL_StatusTypeDef ret1 = HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
-      |                     ^~~~
 arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 Finished building target: Matching_Network.elf
  
 arm-none-eabi-size  Matching_Network.elf 
 arm-none-eabi-objdump -h -S Matching_Network.elf  > "Matching_Network.list"
    text	   data	    bss	    dec	    hex	filename
-  26896	    116	   2476	  29488	   7330	Matching_Network.elf
+  31652	    108	   2548	  34308	   8604	Matching_Network.elf
 arm-none-eabi-objcopy  -O ihex Matching_Network.elf  "Matching_Network.hex"
 Finished building: default.size.stdout
  
@@ -32,5 +16,5 @@ Finished building: Matching_Network.hex
 Finished building: Matching_Network.list
  
 
-23:42:51 Build Finished. 0 errors, 5 warnings. (took 1s.387ms)
+12:01:39 Build Finished. 0 errors, 0 warnings. (took 1s.273ms)
 

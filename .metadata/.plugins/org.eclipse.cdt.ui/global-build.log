@@ -1,53 +1,81 @@
-23:18:29 **** Incremental Build of configuration Debug for project OLED ****
+11:21:18 **** Incremental Build of configuration Debug for project Matching_Network ****
 make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I"C:/Users/adity/Desktop/git/Matching_Network_Testing/OLED/Core/Src/u8g2" -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:162:32: warning: passing argument 2 of 'HAL_UART_Receive_IT' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
-  162 |   HAL_UART_Receive_IT(&huart2, &uart_rx_byte, 1);
-      |                                ^~~~~~~~~~~~~
-In file included from ../Core/Inc/stm32f4xx_hal_conf.h:411,
-                 from ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:29,
-                 from ../Core/Inc/main.h:30,
-                 from ../Core/Src/main.c:20:
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:748:75: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
-  748 | HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-      |                                                                  ~~~~~~~~~^~~~~
-../Core/Src/main.c:257:53: warning: implicit declaration of function 'fabsf' [-Wimplicit-function-declaration]
-  257 |                 int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
-      |                                                     ^~~~~
-../Core/Src/main.c:28:1: note: include '<math.h>' or provide a declaration of 'fabsf'
-   27 | #include "u8g2_stm32.h"
-  +++ |+#include <math.h>
-   28 | 
-../Core/Src/main.c:257:53: warning: incompatible implicit declaration of built-in function 'fabsf' [-Wbuiltin-declaration-mismatch]
-  257 |                 int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
-      |                                                     ^~~~~
-../Core/Src/main.c:257:53: note: include '<math.h>' or provide a declaration of 'fabsf'
-../Core/Src/main.c: In function 'HAL_UART_RxCpltCallback':
-../Core/Src/main.c:461:36: warning: passing argument 2 of 'HAL_UART_Receive_IT' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
-  461 |         HAL_UART_Receive_IT(huart, &uart_rx_byte, 1);
-      |                                    ^~~~~~~~~~~~~
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:748:75: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
-  748 | HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-      |                                                                  ~~~~~~~~~^~~~~
-arm-none-eabi-gcc -o "OLED.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\OLED\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="OLED.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: OLED.elf
+arm-none-eabi-gcc "../Core/Src/functions.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/functions.d" -MT"Core/Src/functions.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/functions.o"
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Matching_Network.elf
  
-arm-none-eabi-size  OLED.elf 
-arm-none-eabi-objdump -h -S OLED.elf  > "OLED.list"
+arm-none-eabi-size  Matching_Network.elf 
+arm-none-eabi-objdump -h -S Matching_Network.elf  > "Matching_Network.list"
    text	   data	    bss	    dec	    hex	filename
-  32044	    104	   3440	  35588	   8b04	OLED.elf
-arm-none-eabi-objcopy  -O ihex OLED.elf  "OLED.hex"
+  31568	    104	   2552	  34224	   85b0	Matching_Network.elf
+arm-none-eabi-objcopy  -O ihex Matching_Network.elf  "Matching_Network.hex"
 Finished building: default.size.stdout
  
-Finished building: OLED.hex
+Finished building: Matching_Network.hex
  
-Finished building: OLED.list
+Finished building: Matching_Network.list
  
-23:36:15 **** Incremental Build of configuration Debug for project OLED ****
+11:36:36 **** Incremental Build of configuration Debug for project Matching_Network ****
 make -j12 all 
-arm-none-eabi-size  OLED.elf 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Matching_Network.elf
+ 
+arm-none-eabi-size  Matching_Network.elf 
+arm-none-eabi-objdump -h -S Matching_Network.elf  > "Matching_Network.list"
    text	   data	    bss	    dec	    hex	filename
-  32044	    104	   3440	  35588	   8b04	OLED.elf
+  31608	    104	   2552	  34264	   85d8	Matching_Network.elf
+arm-none-eabi-objcopy  -O ihex Matching_Network.elf  "Matching_Network.hex"
 Finished building: default.size.stdout
+ 
+Finished building: Matching_Network.hex
+ 
+Finished building: Matching_Network.list
+ 
+11:50:00 **** Incremental Build of configuration Debug for project Matching_Network ****
+make -j12 all 
+arm-none-eabi-size  Matching_Network.elf 
+   text	   data	    bss	    dec	    hex	filename
+  31608	    104	   2552	  34264	   85d8	Matching_Network.elf
+Finished building: default.size.stdout
+ 
+12:00:32 **** Incremental Build of configuration Debug for project Matching_Network ****
+make -j12 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc "../Core/Src/uart_handler.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/uart_handler.d" -MT"Core/Src/uart_handler.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/uart_handler.o"
+../Core/Src/uart_handler.c: In function 'uart_get_command_buffer':
+../Core/Src/uart_handler.c:35:12: warning: return discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+   35 |     return g_rx_buffer;
+      |            ^~~~~~~~~~~
+arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Matching_Network.elf
+ 
+arm-none-eabi-size  Matching_Network.elf 
+arm-none-eabi-objdump -h -S Matching_Network.elf  > "Matching_Network.list"
+   text	   data	    bss	    dec	    hex	filename
+  31652	    104	   2552	  34308	   8604	Matching_Network.elf
+arm-none-eabi-objcopy  -O ihex Matching_Network.elf  "Matching_Network.hex"
+Finished building: default.size.stdout
+ 
+Finished building: Matching_Network.hex
+ 
+Finished building: Matching_Network.list
+ 
+12:01:37 **** Incremental Build of configuration Debug for project Matching_Network ****
+make -j12 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\adity\Desktop\git\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Matching_Network.elf
+ 
+arm-none-eabi-size  Matching_Network.elf 
+arm-none-eabi-objdump -h -S Matching_Network.elf  > "Matching_Network.list"
+   text	   data	    bss	    dec	    hex	filename
+  31652	    108	   2548	  34308	   8604	Matching_Network.elf
+arm-none-eabi-objcopy  -O ihex Matching_Network.elf  "Matching_Network.hex"
+Finished building: default.size.stdout
+ 
+Finished building: Matching_Network.hex
+ 
+Finished building: Matching_Network.list
  

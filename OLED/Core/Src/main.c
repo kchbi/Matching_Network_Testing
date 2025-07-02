@@ -25,6 +25,8 @@
 #include <string.h>
 #include "u8g2.h"
 #include "u8g2_stm32.h"
+#include "uart_handler.h"
+#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -49,18 +51,15 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint8_t uart_rx_byte = 0;
-#define RX_BUFFER_SIZE 64
-volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
-volatile uint8_t rx_index = 0;
-volatile uint8_t g_command_received_flag = 0; // A flag to signal the main loop
-
-// Let's also add a state variable for our test
+// Application state variable
 volatile uint8_t g_test_is_running = 0;
 
+// Application data
 #define NUM_PARAMETERS 24
 float parameters[NUM_PARAMETERS] = {0.0f};
 
+// OLED display handle
+static u8g2_t u8g2;
 const char* parameter_names_for_reference[NUM_PARAMETERS] = {
     "X1 Time Min->Max", "X1 Time Max->Min", "X2 Time Min->Max", "X2 Time Max->Min",
     "X1 +15V I Min->Max", "X1 -15V I Min->Max", "X1 +24V I Min->Max",
@@ -70,9 +69,7 @@ const char* parameter_names_for_reference[NUM_PARAMETERS] = {
     "X1 Min Pos V", "X1 Max Pos V", "X2 Min Pos V", "X2 Max Pos V",
     "X1 Step Min->Max", "X1 Step Max->Min", "X2 Step Min->Max", "X2 Step Max->Min"
 };
-static u8g2_t u8g2;
 #define DATA_LOG_LENGTH 32
-
 uint32_t data_log[DATA_LOG_LENGTH] = {
     101,
     255,
@@ -159,7 +156,7 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, &uart_rx_byte, 1);
+  uart_handler_init(&huart2);
   u8g2_Setup_sh1106_i2c_128x64_noname_f(
       &u8g2,
       U8G2_R0,
@@ -178,115 +175,93 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	    // ===================================================================
-	    // 1. COMMAND HANDLING SECTION
-	    //    This part runs on every loop to check if a command has arrived
-	    //    from the Python GUI via the UART interrupt.
-	    // ===================================================================
-	    if (g_command_received_flag) {
-	        printf("DBG_MAIN: Flag detected.\r\n");
-	        fflush(stdout);
-	        // Compare the received string with our expected command
-	        if (strcmp((char*)rx_buffer, "CMD:PERFORM_TEST") == 0) {
-	        	printf("DBG_MAIN: Command MATCHED!\r\n");
-	        	fflush(stdout);
-	            g_test_is_running = 1; // Set the state to "Test Active"
-	        }
-	        else
-	        {
-	            printf("DBG_MAIN: Command MISMATCH! Received: [%s]\r\n", (char*)rx_buffer);
-	            fflush(stdout);
+	  // ===================================================================
+	      // 1. COMMAND HANDLING SECTION (Now clean and using the new module)
+	      // ===================================================================
+	      if (uart_command_is_ready()) {
+	          const char* command = (const char*)uart_get_command_buffer();
 
-	        }
-	        // You could add a "stop" command here later
-	        // else if (strcmp((char*)rx_buffer, "CMD:STOP_TEST") == 0) {
-	        //    g_test_is_running = 0; // Set the state to "Idle"
-	        // }
+	          printf("DBG_MAIN: Flag detected.\r\n");
+	          fflush(stdout);
 
-	        // Reset for the next command
-	        g_command_received_flag = 0;
-	        rx_index = 0;
-	        memset((void*)rx_buffer, 0, RX_BUFFER_SIZE);
-	    }
+	          if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
+	              printf("DBG_MAIN: Command for Start MATCHED!\r\n");
+	              fflush(stdout);
+	              g_test_is_running = 1;
+	          } else if (strcmp(command, "CMD:STOP_TEST") == 0) {
+	              printf("DBG_MAIN: Command for Stop MATCHED!\r\n");
+	              fflush(stdout);
+	              g_test_is_running = 0;
+	          } else {
+	              printf("DBG_MAIN: Command MISMATCH! Received: [%s]\r\n", command);
+	              fflush(stdout);
+	          }
 
+	          // Reset the UART handler for the next command
+	          uart_reset_for_next_command();
+	      }
 
-	    // ===================================================================
-	    // 2. STATE-BASED ACTION SECTION
-	    //    The device behaves differently based on the g_test_is_running
-	    //    state variable.
-	    // ===================================================================
-	    if (g_test_is_running)
-	    {
-	        // --- STATE: TEST ACTIVE ---
+	      // ===================================================================
+	      // 2. STATE-BASED ACTION SECTION (Unchanged)
+	      // ===================================================================
+	      if (g_test_is_running) {
+	          // --- STATE: TEST ACTIVE ---
+	          // A. Simulate live data
+	          parameters[0] = 3.20f + (HAL_GetTick() % 100) / 1000.0f;
+	          parameters[1] = 3.10f + (HAL_GetTick() % 100) / 1000.0f;
+	          parameters[2] = 3.30f + (HAL_GetTick() % 100) / 1000.0f;
+	          parameters[3] = 3.40f + (HAL_GetTick() % 100) / 1000.0f;
+	          parameters[4] = 0.13f + (HAL_GetTick() % 100) / 2000.0f;
+	          parameters[5] = 0.10f + (HAL_GetTick() % 100) / 2000.0f;
+	          for (int i = 6; i < NUM_PARAMETERS; i++) {
+	              parameters[i] = (float)i + ((HAL_GetTick() % 1000) / 1000.0f);
+	          }
 
-	        // A. Simulate live data
-	        parameters[0] = 3.20 + (HAL_GetTick() % 100) / 1000.0f; // X1 Time Min->Max
-	        parameters[1] = 3.10 + (HAL_GetTick() % 100) / 1000.0f; // X1 Time Max->Min
-	        parameters[2] = 3.30 + (HAL_GetTick() % 100) / 1000.0f; // X2 Time Min->Max
-	        parameters[3] = 3.40 + (HAL_GetTick() % 100) / 1000.0f; // X2 Time Max->Min
-	        parameters[4] = 0.13 + (HAL_GetTick() % 100) / 2000.0f; // X1 +15V I Min->Max
-	        parameters[5] = 0.10 + (HAL_GetTick() % 100) / 2000.0f; // X1 -15V I Min->Max
-	        // Fill in the rest of the 24 parameters with real or simulated data
-	        for (int i = 6; i < NUM_PARAMETERS; i++) {
-	            parameters[i] = (float)i + ((HAL_GetTick() % 1000) / 1000.0f);
-	        }
+	          // B. Send data to Python GUI
+	          printf("DATA,");
+	          for (int i = 0; i < NUM_PARAMETERS; i++) {
+	              printf("%ld", (int32_t)(parameters[i] * 1000.0f));
+	              if (i < NUM_PARAMETERS - 1) {
+	                  printf(",");
+	              }
+	          }
+	          printf("\n");
+	          fflush(stdout);
 
-	        // B. Send data to Python GUI as a CSV string
-	        //    **IMPORTANT: Using the corrected "%.3f" specifier**
-	        printf("DATA,");
-	        for (int i = 0; i < NUM_PARAMETERS; i++) {
-	        	printf("%ld", (int32_t)(parameters[i] * 1000.0f));
-	            if (i < NUM_PARAMETERS - 1) {
-	                printf(",");
-	            }
-	        }
-	        printf("\n");
-	        fflush(stdout);
+	          // C. Update the OLED display
+	          u8g2_ClearBuffer(&u8g2);
+	          u8g2_SetFont(&u8g2, u8g2_font_ncenB10_tr);
+	          u8g2_DrawStr(&u8g2, 0, 18, "Test Running...");
+	          u8g2_SetFont(&u8g2, u8g2_font_profont12_tr);
+	          char display_buf[32]; // Buffer for display lines
 
-	        // C. Update the OLED display with the current status
-	        u8g2_ClearBuffer(&u8g2);
-	        u8g2_SetFont(&u8g2, u8g2_font_ncenB10_tr);
-	        u8g2_DrawStr(&u8g2, 0, 18, "Test Running...");
-	        u8g2_SetFont(&u8g2, u8g2_font_profont12_tr);
+	         // --- NEW METHOD for "X1 Time" (replaces snprintf with %.2f) ---
+	          	  int32_t integer_part = (int32_t)parameters[0];
+	          	        // Use fabsf() to handle the fractional part of negative numbers correctly
+	          	        int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
+	          	        // Use %ld for long int and %02ld to pad the fraction with a zero (e.g., 3.05)
+	          	        snprintf(display_buf, sizeof(display_buf), "X1 Time: %ld.%02ld s", integer_part, fractional_part);
+	          	        u8g2_DrawStr(&u8g2, 0, 40, display_buf);
 
-	        char display_buf[32]; // Buffer for display lines
-
-	        // --- NEW METHOD for "X1 Time" (replaces snprintf with %.2f) ---
-	        int32_t integer_part = (int32_t)parameters[0];
-	        // Use fabsf() to handle the fractional part of negative numbers correctly
-	        int32_t fractional_part = (int32_t)(fabsf(parameters[0] * 100.0f)) % 100;
-	        // Use %ld for long int and %02ld to pad the fraction with a zero (e.g., 3.05)
-	        snprintf(display_buf, sizeof(display_buf), "X1 Time: %ld.%02ld s", integer_part, fractional_part);
-	        u8g2_DrawStr(&u8g2, 0, 40, display_buf);
-
-	        // --- NEW METHOD for "X1 +15V I" (replaces snprintf with %.2f) ---
-	        integer_part = (int32_t)parameters[4];
-	        fractional_part = (int32_t)(fabsf(parameters[4] * 100.0f)) % 100;
-	        snprintf(display_buf, sizeof(display_buf), "X1 +15V I: %ld.%02ld A", integer_part, fractional_part);
-	        u8g2_DrawStr(&u8g2, 0, 55, display_buf);
+	          	        // --- NEW METHOD for "X1 +15V I" (replaces snprintf with %.2f) ---
+	          	        integer_part = (int32_t)parameters[4];
+	          	        fractional_part = (int32_t)(fabsf(parameters[4] * 100.0f)) % 100;
+	          	        snprintf(display_buf, sizeof(display_buf), "X1 +15V I: %ld.%02ld A", integer_part, fractional_part);
+	          	        u8g2_DrawStr(&u8g2, 0, 55, display_buf);
 
 	        u8g2_SendBuffer(&u8g2);
+	      } else {
+	          // --- STATE: IDLE ---
+	          u8g2_ClearBuffer(&u8g2);
+	          u8g2_SetFont(&u8g2, u8g2_font_ncenB10_tr);
+	          u8g2_DrawStr(&u8g2, 0, 35, "Ready...");
+	          u8g2_SetFont(&u8g2, u8g2_font_profont12_tr);
+	          u8g2_DrawStr(&u8g2, 0, 55, "Waiting for command");
+	          u8g2_SendBuffer(&u8g2);
+	      }
+
+	      HAL_Delay(500);
 	    }
-	    else
-	    {
-	        // --- STATE: IDLE ---
-
-	        // A. Update the OLED display to show it's ready for a command
-	        u8g2_ClearBuffer(&u8g2);
-	        u8g2_SetFont(&u8g2, u8g2_font_ncenB10_tr);
-	        u8g2_DrawStr(&u8g2, 0, 35, "Ready...");
-	        u8g2_SetFont(&u8g2, u8g2_font_profont12_tr);
-	        u8g2_DrawStr(&u8g2, 0, 55, "Waiting for command");
-	        u8g2_SendBuffer(&u8g2);
-
-	        // B. Note: We do NOT send any "DATA,..." here. We are idle.
-	    }
-
-	    // A single, short delay at the end of the main loop to prevent the CPU
-	    // from running at 100% and to set the update rate of our application.
-	    HAL_Delay(500); // Update rate of 2Hz (1000ms / 500ms)
-
-  }
   /* USER CODE END 3 */
 }
 
@@ -425,56 +400,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == USART2)
-    {
-        // Check if the received character is a line ending.
-        if (uart_rx_byte == '\n' || uart_rx_byte == '\r')
-        {
-            // If we have received characters, process the command.
-            if (rx_index > 0)
-            {
-                // Null-terminate the string in our command buffer.
-                rx_buffer[rx_index] = '\0';
-
-                // Set the flag for the main loop to process the command.
-                g_command_received_flag = 1;
-
-                // Note: We don't reset rx_index here.
-                // The main loop will do it after processing.
-            }
-        }
-        else
-        {
-            // Add the received byte to our command buffer if there's space.
-            if (rx_index < RX_BUFFER_SIZE - 1)
-            {
-                rx_buffer[rx_index++] = uart_rx_byte;
-            }
-        }
-
-        // CRITICAL: Re-arm the UART receive interrupt to listen for the NEXT single byte.
-        // We ALWAYS listen into our 1-byte buffer.
-        HAL_UART_Receive_IT(huart, &uart_rx_byte, 1);
-    }
-}
-
-#ifdef __GNUC__
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
-
-PUTCHAR_PROTOTYPE
-{
-  // Change HUART2 to the UART handle you are using
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-  return ch;
-}
-
 
 /* USER CODE END 4 */
 

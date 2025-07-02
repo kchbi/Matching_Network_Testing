@@ -1,6 +1,9 @@
 Pot1_2
-lagtime2
-Motor2_Start
-Motor2_End
-time_taken
-rx_buffer
+ADC_MIN_TO_ADC_MAX_M1
+ADC_MAX_TO_ADC_MIN_M1
+ADC_MIN_TO_ADC_MAX_M2
+ADC_MAX_TO_ADC_MIN_M2
+Get_M1_Min_to_Max_Smoothness
+Get_M1_Max_to_Min_Smoothness
+Get_M2_Min_to_Max_Smoothness
+Get_M2_Max_to_Min_Smoothness
