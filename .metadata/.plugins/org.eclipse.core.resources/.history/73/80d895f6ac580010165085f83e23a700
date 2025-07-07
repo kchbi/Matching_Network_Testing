@@ -1,0 +1,108 @@
+/*
+ * i2ccomm.c
+ *
+ *  Created on: Jul 2, 2025
+ *      Author: adity
+ */
+#include "I2ccomm.h"
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+uint32_t Timeout = 100 ;
+#define FirstDeviceAddress  0x40
+#define ConfigAddress 0x00
+#define CalibrationAddress 0x05
+#define VoltageAddress 0x02
+#define CurrentAddress 0x04
+uint16_t ConfigSettings = 0x4527 ;
+static float Maximum_Expected_Current = 1;
+float Shunt_Resistor_Value = 0.1f ;
+float Current_LSB = Maximum_Expected_Current/(pow(2,15));
+float calculated_cal_float = 0.00512f / (Current_LSB * Shunt_Resistor_Value);
+uint16_t calibration_value = (uint16_t)calculated_cal_float;
+HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
+{
+	if(HAL_I2C_IsDeviceReady(hi2c, ((DevAddress) << 1) +0 , 10,  Timeout) != HAL_OK)
+	{
+		printf("The I2C Device is not Ready \n");
+		return HAL_ERROR;
+	}
+	printf("The Device is Ready \n");
+	uint8_t tx_buffer[2];
+	tx_buffer[0] = ConfigSettings >> 8 ;
+	tx_buffer[1] = (ConfigSettings & 0xFF);
+	if(HAL_I2C_Mem_Write(hi2c, ((DevAddress) << 1) +0, ConfigAddress , I2C_MEMADD_SIZE_8BIT, tx_buffer, 2, Timeout) != HAL_OK)
+	{
+		printf("Failed to do the Configuration \n");
+		return HAL_ERROR;
+	}
+	printf("Configuration was done Successfully \n");
+
+
+	tx_buffer[0] = calibration_value >> 8 ;
+	tx_buffer[1] = (calibration_value & 0xFF);
+
+	if(HAL_I2C_Mem_Write(hi2c, ((DevAddress) << 1) +0, CalibrationAddress , I2C_MEMADD_SIZE_8BIT, tx_buffer, 2, Timeout) != HAL_OK)
+	{
+		printf("Failed to do the Calibration \n");
+		return HAL_ERROR;
+	}
+	printf("Calibration was done Successfully \n");
+	return HAL_OK;
+
+}
+
+HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Voltage )
+{
+	uint8_t rx_buffer[2];
+	if(HAL_I2C_Mem_Read(hi2c,((DevAddress<<1) +1), VoltageAddress ,  I2C_MEMADD_SIZE_8BIT, rx_buffer, 2, Timeout) != HAL_OK)
+	{
+		printf("Could not read the Voltage from Voltage Register \n");
+		return HAL_ERROR;
+
+	}
+
+    // 2. Combine the two 8-bit bytes into one 16-bit unsigned integer (MSB first)
+    uint16_t raw_voltage = (rx_buffer[0] << 8) | rx_buffer[1];
+
+    // 3. Convert the raw value to Volts by multiplying by the LSB (1.25mV)
+    //    The datasheet specifies a fixed LSB for voltage of 1.25 mV/bit.
+    //    *voltage_V is used to "return" the float value via a pointer.
+    *Voltage = raw_voltage * 0.00125f;
+
+    // Optional: Print the result for debugging
+    // printf("Raw Voltage: 0x%04X, Calculated Voltage: %.3f V\n", raw_voltage, *voltage_V);
+    printf("Read the Voltage from the Voltage Register Successfully \n");
+
+	return HAL_OK;
+
+
+}
+
+HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Current )
+{
+	uint8_t rx_buffer[2];
+	if(HAL_I2C_Mem_Read(hi2c,((DevAddress<<1) +1), CurrentAddress ,  I2C_MEMADD_SIZE_8BIT, rx_buffer, 2, Timeout) != HAL_OK)
+	{
+		printf("Could not read the Current from Current Register \n");
+		return HAL_ERROR;
+
+	}
+
+    // 2. Combine the two 8-bit bytes into one 16-bit unsigned integer (MSB first)
+    uint16_t raw_current = (rx_buffer[0] << 8) | rx_buffer[1];
+
+    // 3. Convert the raw value to Ampere by multiplying by the LSB (1 mA)
+    //    The datasheet specifies a fixed LSB for Current of 1 mA/bit.
+    //    *Current is used to "return" the float value via a pointer.
+    *Current = raw_current * Current_LSB;
+    printf("Read the current from Current Register Successfully \n");
+
+    // Optional: Print the result for debugging
+    // printf("Raw Current: 0x%04X, Calculated Current: %.3f V\n", raw_current, *Current);
+
+	return HAL_OK;
+
+
+}

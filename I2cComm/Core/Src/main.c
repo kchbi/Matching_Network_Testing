@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "i2ccomm.h"
 
 /* USER CODE END Includes */
 
@@ -69,7 +70,31 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#include <stdio.h> // Required for printf
 
+// This function sends a character over the ITM channel.
+// It is the low-level implementation for our _write function.
+int __io_putchar(int ch)
+{
+  // ITM_SendChar is a Core-M function that sends a single character
+  // to the ITM Port 0. This is the standard port for console output.
+  ITM_SendChar(ch);
+  return ch;
+}
+
+// Retargets the C library printf function to the ITM.
+// This is the function that the C library will call.
+int _write(int file, char *ptr, int len)
+{
+  int DataIdx;
+  for (DataIdx = 0; DataIdx < len; DataIdx++)
+  {
+    __io_putchar(*ptr++);
+  }
+  return len;
+}
+
+float Vol_Curr_Readings[2]={0};
 /* USER CODE END 0 */
 
 /**
@@ -109,6 +134,13 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  if (I2C_Init(&hi2c1,FirstDeviceAddress) != HAL_OK)
+  {
+	  printf("Failed to Initalize the First Device \n");
+  }
+  printf("Initlization Successfull of First Device \n");
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,9 +149,10 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-
-
     /* USER CODE BEGIN 3 */
+	  I2C_ReadVoltage(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[0]);
+	  I2C_ReadCurrent(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[1]);
+	  printf("Loop Successfully Executed \n");
   }
   /* USER CODE END 3 */
 }

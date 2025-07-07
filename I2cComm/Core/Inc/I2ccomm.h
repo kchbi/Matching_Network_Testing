@@ -12,14 +12,15 @@
 
 // --- Public Function Prototypes ---
 extern uint32_t Timeout;
-
+extern uint16_t DevAddress;
+#define FirstDeviceAddress  0x40
 // Initializes the INA226 sensor with a given I2C handle and shunt resistor value.
-HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, float shunt_resistor_ohm);
+HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress);
 
 // Reads the bus voltage in Volts.
-float I2C_ReadBusVoltage(void);
+HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Voltage);
 
 // Reads the current in Amperes.
-float I2C_ReadCurrent(void);
+HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Current);
 
 #endif /* INC_I2CCOMM_H_ */
