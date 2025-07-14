@@ -1,10 +1,10 @@
-19:21:34 **** Incremental Build of configuration Debug for project I2cComm ****
+15:41:24 **** Incremental Build of configuration Debug for project I2cComm ****
 make -j12 all 
 arm-none-eabi-size  I2cComm.elf 
    text	   data	    bss	    dec	    hex	filename
-  28260	    108	   2380	  30748	   781c	I2cComm.elf
+  31584	    108	   2412	  34104	   8538	I2cComm.elf
 Finished building: default.size.stdout
  
 
-19:21:35 Build Finished. 0 errors, 0 warnings. (took 569ms)
+15:41:25 Build Finished. 0 errors, 0 warnings. (took 575ms)
 

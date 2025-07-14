@@ -26,6 +26,7 @@
 #include <string.h>
 #include "uart_handler.h"
 #include <math.h>
+#include "i2ccomm.h"
 
 /* USER CODE END Includes */
 
@@ -67,51 +68,8 @@ volatile uint8_t g_test_is_running = 1;
 #define NUM_PARAMETERS 24
 float parameters[NUM_PARAMETERS] = {0.0f};
 
-// OLED display handle
-const char* parameter_names_for_reference[NUM_PARAMETERS] = {
-    "X1 Time Min->Max", "X1 Time Max->Min", "X2 Time Min->Max", "X2 Time Max->Min",
-    "X1 +15V I Min->Max", "X1 -15V I Min->Max", "X1 +24V I Min->Max",
-    "X1 +15V I Max->Min", "X1 -15V I Max->Min", "X1 +24V I Max->Min",
-    "X2 +15V I Min->Max", "X2 -15V I Min->Max", "X2 +24V I Min->Max",
-    "X2 +15V I Max->Min", "X2 -15V I Max->Min", "X2 +24V I Max->Min",
-    "X1 Min Pos V", "X1 Max Pos V", "X2 Min Pos V", "X2 Max Pos V",
-    "X1 Step Min->Max", "X1 Step Max->Min", "X2 Step Min->Max", "X2 Step Max->Min"
-};
 #define DATA_LOG_LENGTH 32
-uint32_t data_log[DATA_LOG_LENGTH] = {
-    101,
-    255,
-    1024,
-    7,
-    33000,
-    65535,
-    12345,
-    9876,
-    5,
-    4095,
-    8192,
-    16384,
-    32768,
-    64001,
-    128,
-    2048,
-    99999,
-    1,
-    0,
-    123,
-    4567,
-    891011,
-    121314,
-    555,
-    7777,
-    88,
-    42,
-    1000000,
-    2500,
-    1337,
-    54321,
-    999
-};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -172,6 +130,13 @@ int main(void)
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
+  if (I2C_Init(&hi2c1,DevAddress1P) != HAL_OK)
+  {
+	  printf("Failed to Initalize the First Device \n");
+  }
+  printf("Initlization Successfull of First Device \n");
+  HAL_Delay(100);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -271,16 +236,24 @@ int main(void)
     	    // Note: We cast the uint32_t time results to float to match the array type.
 
     	    // --- Time Tests ---
-    	    parameters[0] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
-    	    parameters[1] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
-    	    parameters[2] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
-    	    parameters[3] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
+    	    parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
+    	    parameters[PARAM_X1_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
+    	    parameters[PARAM_X2_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
+    	    parameters[PARAM_X2_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
+    	    //----Current Test for Motors---
+    	    // When I call the Above function it would also populate all of the parameters related to Current of Motors
+    	    //---Current Test for Motors finished
+    	    //---Current Test for Potentiometers--
+
+
+
+
 
     	    // --- Smoothness Tests ---
-    	    parameters[20] = Get_M1_Min_to_Max_Smoothness();
-    	    parameters[21] = Get_M1_Max_to_Min_Smoothness();
-    	    parameters[22] = Get_M2_Min_to_Max_Smoothness();
-    	    parameters[23] = Get_M2_Max_to_Min_Smoothness();
+    	    parameters[PARAM_X1_STEP_MIN_MAX] = Get_M1_Min_to_Max_Smoothness();
+    	    parameters[PARAM_X1_STEP_MAX_MIN] = Get_M1_Max_to_Min_Smoothness();
+    	    parameters[PARAM_X2_STEP_MIN_MAX] = Get_M2_Min_to_Max_Smoothness();
+    	    parameters[PARAM_X2_STEP_MAX_MIN] = Get_M2_Max_to_Min_Smoothness();
 
 
     	    // 2. Fill in all other placeholder parameters with a constant value (0.0).
@@ -294,7 +267,7 @@ int main(void)
     	    // 3. Send the complete data packet to the Python GUI.
     	    printf("DATA,");
     	    for (int i = 0; i < NUM_PARAMETERS; i++) {
-    	        // We multiply by 1000.0 to send floats as integers with 3 decimal places.
+    	        // We multiply by 1000.0 to send floats as integers with 3 decimal places. We will divide this by 1000 on the GUI Side to get the Real result
     	        printf("%ld", (int32_t)(parameters[i] * 1000.0f));
     	        if (i < NUM_PARAMETERS - 1) {
     	            printf(",");

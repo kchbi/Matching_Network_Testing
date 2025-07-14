@@ -22,6 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "i2ccomm.h"
+#include "ina226.h"
+#include <stdio.h>
+INA226_Handle_t ina226_sensor;
 
 /* USER CODE END Includes */
 
@@ -130,15 +133,33 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
+//  I2C_ClearBus(&hi2c1);
   MX_I2C1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  I2C_Scan(&hi2c1);
 
+  float bus_voltage;
+  float current_A;
+  float power_W;
+
+
+
+  if (INA226_Init(&ina226_sensor, &hi2c1, 0x40, 0.1f, 1.0f) != HAL_OK)
+    {
+        // Initialization failed, hang here or handle the error
+	  printf("Init Failed \r\n");
+        Error_Handler();
+    }
+  printf("Init Successfull \r\n");
+  HAL_Delay(100);
   if (I2C_Init(&hi2c1,FirstDeviceAddress) != HAL_OK)
   {
 	  printf("Failed to Initalize the First Device \n");
   }
   printf("Initlization Successfull of First Device \n");
+
+  HAL_Delay(100);
 
 
   /* USER CODE END 2 */
@@ -150,9 +171,35 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  I2C_ReadVoltage(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[0]);
-	  I2C_ReadCurrent(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[1]);
+	  HAL_StatusTypeDef status_v1 = HAL_ERROR;
+	  HAL_StatusTypeDef status_c1 = HAL_ERROR;
+	  status_v1 = I2C_ReadVoltage(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[0]);
+	  status_c1 = I2C_ReadCurrent(&hi2c1, FirstDeviceAddress , &Vol_Curr_Readings[1]);
 	  printf("Loop Successfully Executed \n");
+	  HAL_Delay(1000);
+	    HAL_StatusTypeDef status_v, status_c, status_p;
+
+	    status_v = INA226_ReadBusVoltage(&ina226_sensor, &bus_voltage);
+	    status_c = INA226_ReadCurrent(&ina226_sensor, &current_A);
+	    status_p = INA226_ReadPower(&ina226_sensor, &power_W);
+
+	    // Check if all reads were successful
+	    if (status_v == HAL_OK && status_c == HAL_OK && status_p == HAL_OK)
+	    {
+	        // You can now use the variables bus_voltage, current_A, and power_W
+	        // For example, print them via a debugger or a UART connection
+	        // Note: printf requires retargeting to UART or ITM Data Console in CubeIDE
+	    	printf("Succesfully read the Voltage and Current readings from the I2c IC \r\n ");
+	    }
+	    else
+	    {
+	        // An error occurred during I2C communication
+	        printf("Failed to read from INA226\r\n");
+	    }
+
+	    // Wait for a second before the next reading
+	    HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 }

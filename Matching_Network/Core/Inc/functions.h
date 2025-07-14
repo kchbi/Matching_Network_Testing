@@ -27,6 +27,14 @@
  */
 extern uint16_t volatile Pot1_2[2];
 
+/**
+ * @brief Global variable to hold the result of the Test
+ *        Defined in main.c, declared here to be visible across files.
+ */
+
+#define NUM_PARAMETERS 24
+extern float parameters[NUM_PARAMETERS];
+
 // ===================================================================
 // 3. PUBLIC DATA TYPES
 // ===================================================================
@@ -36,6 +44,32 @@ typedef enum {
     MOTOR_REVERSE
 } MotorDirection_t;
 
+typedef enum {
+    PARAM_X1_TIME_MIN_MAX = 0,
+    PARAM_X1_TIME_MAX_MIN = 1,
+    PARAM_X2_TIME_MIN_MAX = 2,
+    PARAM_X2_TIME_MAX_MIN = 3,
+    PARAM_X1_P15V_I_MIN_MAX = 4,
+	PARAM_X1_N15V_I_MIN_MAX = 5,
+	PARAM_X1_24V_I_MIN_MAX = 6,
+    PARAM_X1_P15V_I_MAX_MIN = 7,
+	PARAM_X1_N15V_I_MAX_MIN = 8,
+	PARAM_X1_24V_I_MAX_MIN = 9,
+    PARAM_X2_P15V_I_MIN_MAX = 10,
+	PARAM_X2_N15V_I_MIN_MAX = 11,
+	PARAM_X2_24V_I_MIN_MAX = 12,
+    PARAM_X2_P15V_I_MAX_MIN = 13,
+	PARAM_X2_N15V_I_MAX_MIN = 14,
+	PARAM_X2_24V_I_MAX_MIN = 15,
+	PARAM_X1_MIN_POS_V = 16,
+	PARAM_X1_MAX_POS_V = 17,
+	PARAM_X2_MIN_POS_V = 18,
+	PARAM_X2_MAX_POS_V = 19,
+	PARAM_X1_STEP_MIN_MAX=20,
+	PARAM_X1_STEP_MAX_MIN=21,
+	PARAM_X2_STEP_MIN_MAX = 22,
+	PARAM_X2_STEP_MAX_MIN = 23
+} ParameterIndex_t;
 
 // ===================================================================
 // 4. PUBLIC FUNCTION PROTOTYPES

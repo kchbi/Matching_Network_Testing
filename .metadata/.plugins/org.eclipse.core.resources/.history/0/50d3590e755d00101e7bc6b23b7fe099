@@ -1,0 +1,382 @@
+/*
+ * functions.c
+ *
+ *  Created on: Jun 1, 2025
+ *      Author: Aditya Singh
+ */
+#include "stm32f4xx_hal.h"
+#include "main.h"
+#include "functions.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "i2ccomm.h"
+
+// ===================================================================
+// 1. CONFIGURATION CONSTANTS (Refactored from hardcoded values)
+// ===================================================================
+#define MOTOR1_IN1          GPIO_PIN_7
+#define MOTOR1_IN2          GPIO_PIN_8
+#define MOTOR2_IN1          GPIO_PIN_9
+#define MOTOR2_IN2          GPIO_PIN_11
+
+#define MOTOR_SPEED         (150)     //CHANGED: Centralized speed setting
+#define PWM_MAX_DUTY        (199)     //CHANGED: Matched to timer period for full range
+#define MOVE_TIMEOUT_MS     (5000)    //CHANGED: Timeout for any motor movement
+#define SETTLE_DELAY_MS     (100)     //CHANGED: Delay for motor to settle
+#define LOOP_DELAY_MS       (10)      //Delay in motor control loops
+#define DevAddress1P        (0x40)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to Ground
+#define DevAddress1N        (0x41)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to Vs
+#define DevAddressPot1      (0x42)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to SDA
+#define DevAddress2P        (0x43)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to SCL
+#define DevAddress2N        (0x44)    //Device Address(Slave Address) when A1 is connected to Vs and A0 is connected to GND
+#define DevAddressPot2      (0x45)    //Device Address(Slave Address) when A1 is connected to Vs and A0 is connected to Vs
+
+
+
+float Max_PCurrent = 0;
+float Max_NCurrent = 0;
+float Max_PotCurrent = 0;
+extern I2C_HandleTypeDef hi2c1;
+// ===================================================================
+// 2. PRIVATE HELPER FUNCTIONS (Marked as 'static')
+// ===================================================================
+// These functions are only used inside this file.
+
+void motor1_set_state(MotorDirection_t direction, uint32_t speed)
+{
+    if (speed > PWM_MAX_DUTY) {
+        speed = PWM_MAX_DUTY;
+    }
+    switch (direction) {
+        case MOTOR_FORWARD:
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
+            TIM1->CCR1 = speed;
+            break;
+        case MOTOR_REVERSE:
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+            TIM1->CCR1 = speed;
+            break;
+        case MOTOR_STOP:
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+            TIM1->CCR1 = speed;
+            break;
+    }
+}
+
+void motor2_set_state(MotorDirection_t direction, uint32_t speed)
+{
+    if (speed > PWM_MAX_DUTY) {
+        speed = PWM_MAX_DUTY;
+    }
+    switch (direction) {
+        case MOTOR_FORWARD:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
+            TIM2->CCR1 = speed;
+            break;
+        case MOTOR_REVERSE:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+            TIM2->CCR1 = speed;
+            break;
+        case MOTOR_STOP:
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+            TIM2->CCR1 = speed;
+            break;
+    }
+}
+
+void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance)
+{
+    uint16_t currentADC;                     //Local Variable to store the ADC of Motor
+    int32_t error;                           //Local Variable to store the difference between the ADC Values of target ADC and Current ADC
+    uint32_t timeout_start = HAL_GetTick();  //Starting the timer for a exit if the system fails
+    float Inst_PCurrent ;                    //Records the Instantaneous +15V Current of Motor inside the function
+    float Inst_NCurrent ;                    //Records the Instantaneous -15V Current of Motor inside the function
+    float Inst_PotCurrent ;                  //Records the Instantaneous Potentiometer Current inside the function
+	Max_PCurrent = 0 ;                       //Global Variable to store +15V Current reIntialized at the Start of the Function to be filled with the required values
+	Max_NCurrent = 0 ;                       //Global Variable to store -15V Current reIntialized at the Start of the Function to be filled with the required values
+	Max_PotCurrent = 0 ;                     //Global Variable to store 24V Current reIntialized at the Start of the Function to be filled with the required values
+
+
+
+    while (1) {
+        currentADC = Pot1_2[0];
+        error = (int32_t)targetADC - (int32_t)currentADC;
+        I2C_ReadCurrent(&hi2c1, DevAddress1P , &Inst_PCurrent );
+        if (Inst_PCurrent > Max_PCurrent )
+        {
+        	Max_PCurrent=Inst_Current;   //Globally defined float Max_PCurrent = 0.0f We will use this to modify the Parameter array
+
+        }
+        I2C_ReadCurrent(&hi2c1, DevAddress1N , &Inst_NCurrent );
+        if (Inst_NCurrent > Max_NCurrent )
+        {
+        	Max_NCurrent=Inst_NCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
+
+        }
+
+
+        if (labs(error) <= tolerance) {
+            motor1_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+
+        if (error > 0) {
+            motor1_set_state(MOTOR_FORWARD, MOTOR_SPEED);// When this is called this should drive the Motor in the Direction where ADC Increases
+        } else {
+            motor1_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+        }
+
+        if (HAL_GetTick() - timeout_start > MOVE_TIMEOUT_MS) { // <<< CHANGED
+            motor1_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        HAL_Delay(LOOP_DELAY_MS); // <<< CHANGED
+    }
+}
+
+void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance)
+{
+
+    uint16_t currentADC;                     //Local Variable to store the ADC of Motor
+    int32_t error;                           //Local Variable to store the difference between the ADC Values of target ADC and Current ADC
+    uint32_t timeout_start = HAL_GetTick();  //Starting the timer for a exit if the system fails
+    float Inst_PCurrent ;                    //Records the Instantaneous +15V Current of Motor inside the function
+    float Inst_NCurrent ;                    //Records the Instantaneous -15V Current of Motor inside the function
+    float Inst_PotCurrent ;                  //Records the Instantaneous Potentiometer Current inside the function
+	Max_PCurrent = 0 ;                       //Global Variable to store +15V Current reIntialized at the Start of the Function to be filled with the required values
+	Max_NCurrent = 0 ;                       //Global Variable to store -15V Current reIntialized at the Start of the Function to be filled with the required values
+	Max_PotCurrent = 0 ;                     //Global Variable to store 24V Current reIntialized at the Start of the Function to be filled with the required values
+
+    while (1) {
+        currentADC = Pot1_2[1];
+        error = (int32_t)targetADC - (int32_t)currentADC;
+        I2C_ReadCurrent(&hi2c1, DevAddress2P , &Inst_PCurrent );
+        if (Inst_PCurrent > Max_PCurrent )
+        {
+        	Max_PCurrent=Inst_Current;   //Globally defined float Max_PCurrent = 0.0f We will use this to modify the Parameter array
+
+        }
+        I2C_ReadCurrent(&hi2c1, DevAddress2N , &Inst_NCurrent );
+        if (Inst_NCurrent > Max_NCurrent )
+        {
+        	Max_NCurrent=Inst_NCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
+
+        }
+        I2C_ReadCurrent(&hi2c1, DevAddressPot2 , &Inst_PotCurrent );
+        if (Inst_PotCurrent > Max_PotCurrent )
+        {
+        	Max_PotCurrent=Inst_PotCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
+
+        }
+        if (labs(error) <= tolerance) {
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+
+        if (error > 0) {
+            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED); //When this is called the motor should be moving in the direction in which the ADC is increasing
+        } else {
+            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+        }
+
+        if (HAL_GetTick() - timeout_start > MOVE_TIMEOUT_MS) { // <<< CHANGED
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        HAL_Delay(LOOP_DELAY_MS); // <<< CHANGED
+    }
+}
+
+void moveMotor1ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t expected_duration_ms, uint16_t tolerance, int32_t* max_error_out)
+{
+    const int32_t start_adc = Pot1_2[0];
+    const int32_t end_adc = targetADC;
+    int32_t error_to_target;
+    *max_error_out = 0;
+    const uint32_t move_start_tick = HAL_GetTick();
+
+    while (1) {
+        uint16_t current_adc = Pot1_2[0];
+        error_to_target = end_adc - current_adc;
+        if (labs(error_to_target) <= tolerance) {
+            motor1_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        uint32_t elapsed_time = HAL_GetTick() - move_start_tick;
+        if (expected_duration_ms > 0) {
+            int32_t travel_distance = end_adc - start_adc;
+            int32_t ideal_position = start_adc + (int32_t)(((long long)travel_distance * elapsed_time) / expected_duration_ms);
+            int32_t current_smoothness_error = current_adc - ideal_position;
+            if (labs(current_smoothness_error) > labs(*max_error_out)) {
+                *max_error_out = current_smoothness_error;
+            }
+        }
+        if (error_to_target > 0) {
+            motor1_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+        } else {
+            motor1_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+        }
+        if (HAL_GetTick() - move_start_tick > MOVE_TIMEOUT_MS) { // <<< CHANGED
+            motor1_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        HAL_Delay(LOOP_DELAY_MS); // <<< CHANGED
+    }
+}
+
+void moveMotor2ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t expected_duration_ms, uint16_t tolerance, int32_t* max_error_out)
+{
+    const int32_t start_adc = Pot1_2[1];
+    const int32_t end_adc = targetADC;
+    int32_t error_to_target;
+    *max_error_out = 0;
+    const uint32_t move_start_tick = HAL_GetTick();
+
+    while (1) {
+        uint16_t current_adc = Pot1_2[1];
+        error_to_target = end_adc - current_adc;
+        if (labs(error_to_target) <= tolerance) {
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        uint32_t elapsed_time = HAL_GetTick() - move_start_tick;
+        if (expected_duration_ms > 0) {
+            int32_t travel_distance = end_adc - start_adc;
+            int32_t ideal_position = start_adc + (int32_t)(((long long)travel_distance * elapsed_time) / expected_duration_ms);
+            int32_t current_smoothness_error = current_adc - ideal_position;
+            if (labs(current_smoothness_error) > labs(*max_error_out)) {
+                *max_error_out = current_smoothness_error;
+            }
+        }
+        if (error_to_target > 0) {
+            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+        } else {
+            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+        }
+        if (HAL_GetTick() - move_start_tick > MOVE_TIMEOUT_MS) { // <<< CHANGED
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+            return;
+        }
+        HAL_Delay(LOOP_DELAY_MS); // <<< CHANGED
+    }
+}
+
+// ===================================================================
+// 3. PUBLIC API FUNCTIONS (Declared in functions.h)
+// ===================================================================
+
+uint32_t ADC_MIN_TO_ADC_MAX_M1()
+{
+    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor1_Start = HAL_GetTick();
+    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor1_End = HAL_GetTick();
+    parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent ;
+    parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent ;
+
+    uint32_t time_taken = Motor1_End - Motor1_Start;
+    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    return time_taken;
+}
+
+uint32_t ADC_MAX_TO_ADC_MIN_M1()
+{
+    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor1_Start = HAL_GetTick();
+    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor1_End = HAL_GetTick();
+    parameters[PARAM_X1_P15V_I_MAX_MIN] = Max_PCurrent ;
+    parameters[PARAM_X1_N15V_I_MAX_MIN] = Max_NCurrent ;
+    uint32_t time_taken = Motor1_End - Motor1_Start;
+    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    return time_taken;
+}
+
+uint32_t ADC_MIN_TO_ADC_MAX_M2()
+{
+    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor2_Start = HAL_GetTick();
+    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor2_End = HAL_GetTick();
+    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent ;
+    parameters[PARAM_X2_N15V_I_MIN_MAX] = Max_NCurrent ;
+    uint32_t time_taken = Motor2_End - Motor2_Start;
+    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    return time_taken;
+}
+
+uint32_t ADC_MAX_TO_ADC_MIN_M2()
+{
+    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor2_Start = HAL_GetTick();
+    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    uint32_t Motor2_End = HAL_GetTick();
+    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent ;
+    parameters[PARAM_X2_N15V_I_MAX_MIN] = Max_NCurrent ;
+    uint32_t time_taken = Motor2_End - Motor2_Start;
+    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
+    return time_taken;
+}
+
+float Get_M1_Min_to_Max_Smoothness()
+{
+    uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_M1();
+    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    HAL_Delay(SETTLE_DELAY_MS);
+    int32_t max_error_in_adc;
+    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MAX, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    if (total_distance == 0) return 0.0f;
+    float normalized_error = (float)max_error_in_adc / total_distance;
+    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    return normalized_error;
+}
+
+float Get_M1_Max_to_Min_Smoothness(void)
+{
+    uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_M1();
+    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    HAL_Delay(SETTLE_DELAY_MS);
+    int32_t max_error_in_adc;
+    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MIN, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    if (total_distance == 0) return 0.0f;
+    float normalized_error = (float)max_error_in_adc / total_distance;
+    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    return normalized_error;
+}
+
+float Get_M2_Min_to_Max_Smoothness()
+{
+    uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_M2();
+    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    HAL_Delay(SETTLE_DELAY_MS);
+    int32_t max_error_in_adc;
+    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MAX, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    if (total_distance == 0) return 0.0f;
+    float normalized_error = (float)max_error_in_adc / total_distance;
+    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    return normalized_error;
+}
+
+float Get_M2_Max_to_Min_Smoothness(void)
+{
+    uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_M2();
+    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    HAL_Delay(SETTLE_DELAY_MS);
+    int32_t max_error_in_adc;
+    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MIN, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    if (total_distance == 0) return 0.0f;
+    float normalized_error = (float)max_error_in_adc / total_distance;
+    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    return normalized_error;
+}
