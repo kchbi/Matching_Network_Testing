@@ -1,5 +1,5 @@
 ../Core/Src/i2ccomm.c:33:19:I2C_Init	48	static
 ../Core/Src/i2ccomm.c:96:19:I2C_ReadVoltage	48	static
-../Core/Src/i2ccomm.c:125:19:I2C_ReadCurrent	48	static
-../Core/Src/i2ccomm.c:152:19:I2C_ReadShuntVoltage	48	static
-../Core/Src/i2ccomm.c:166:6:I2C_Scan	24	static
+../Core/Src/i2ccomm.c:124:19:I2C_ReadCurrent	48	static
+../Core/Src/i2ccomm.c:151:19:I2C_ReadShuntVoltage	48	static
+../Core/Src/i2ccomm.c:165:6:I2C_Scan	24	static

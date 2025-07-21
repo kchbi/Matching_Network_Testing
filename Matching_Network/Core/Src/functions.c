@@ -25,19 +25,10 @@
 #define MOVE_TIMEOUT_MS     (5000)    //CHANGED: Timeout for any motor movement
 #define SETTLE_DELAY_MS     (100)     //CHANGED: Delay for motor to settle
 #define LOOP_DELAY_MS       (10)      //Delay in motor control loops
-#define DevAddress1P        (0x40)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to Ground
-#define DevAddress1N        (0x41)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to Vs
-#define DevAddressPot1      (0x42)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to SDA
-#define DevAddress2P        (0x43)    //Device Address(Slave Address) when A1 is connected to Ground and A0 is connected to SCL
-#define DevAddress2N        (0x44)    //Device Address(Slave Address) when A1 is connected to Vs and A0 is connected to GND
-#define DevAddressPot2      (0x45)    //Device Address(Slave Address) when A1 is connected to Vs and A0 is connected to Vs
 
 
 
-float Max_PCurrent = 0;
-float Max_NCurrent = 0;
-float Max_PotCurrent = 0;
-float Voltage ;
+
 extern I2C_HandleTypeDef hi2c1;
 // ===================================================================
 // 2. PRIVATE HELPER FUNCTIONS (Marked as 'static')
@@ -94,41 +85,37 @@ void motor2_set_state(MotorDirection_t direction, uint32_t speed)
 
 void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance)
 {
-    uint16_t currentADC;                     //Local Variable to store the ADC of Motor
-    int32_t error;                           //Local Variable to store the difference between the ADC Values of target ADC and Current ADC
-    uint32_t timeout_start = HAL_GetTick();  //Starting the timer for a exit if the system fails
-    float Inst_PCurrent ;                    //Records the Instantaneous +15V Current of Motor inside the function
-    float Inst_NCurrent ;                    //Records the Instantaneous -15V Current of Motor inside the function
-    float Inst_PotCurrent ;                  //Records the Instantaneous Potentiometer Current inside the function
-	Max_PCurrent = 0 ;                       //Global Variable to store +15V Current reIntialized at the Start of the Function to be filled with the required values
-	Max_NCurrent = 0 ;                       //Global Variable to store -15V Current reIntialized at the Start of the Function to be filled with the required values
-	Max_PotCurrent = 0 ;                     //Global Variable to store 24V Current reIntialized at the Start of the Function to be filled with the required values
-	Voltage = 0;
+    uint16_t currentADC;
+    int32_t error;
+    uint32_t timeout_start = HAL_GetTick();
+    float Inst_Current;
 
+    // Reset the correct global variables for Motor 1
+	Max_PCurrent_M1 = 0;
+	Max_NCurrent_M1 = 0;
+	Voltage_M1 = 0;
 
     while (1) {
         currentADC = Pot1_2[0];
         error = (int32_t)targetADC - (int32_t)currentADC;
-        I2C_ReadCurrent(&hi2c1, DevAddress1P , &Inst_PCurrent );
-        if (Inst_PCurrent > Max_PCurrent )
-        {
-        	Max_PCurrent=Inst_PCurrent;   //Globally defined float Max_PCurrent = 0.0f We will use this to modify the Parameter array
 
+        I2C_ReadCurrent(&hi2c1, DevAddress1, &Inst_Current);
+
+        if (Inst_Current > 0) {
+            // <<< FIX: Compare with the correct Motor 1 variable
+            if (Inst_Current > Max_PCurrent_M1)
+            {
+                Max_PCurrent_M1 = Inst_Current;
+            }
+        } else {
+            // <<< FIX: Compare with the correct Motor 1 variable
+            if (Inst_Current < Max_NCurrent_M1)
+            {
+                Max_NCurrent_M1 = Inst_Current;
+            }
         }
-        I2C_ReadCurrent(&hi2c1, DevAddress1N , &Inst_NCurrent );
-        if (Inst_NCurrent > Max_NCurrent )
-        {
-        	Max_NCurrent=Inst_NCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
 
-        }
-        I2C_ReadCurrent(&hi2c1, DevAddressPot1 , &Inst_PotCurrent );
-        if (Inst_PotCurrent > Max_PotCurrent )
-        {
-        	Max_PotCurrent=Inst_PotCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
-
-        }
-        I2C_ReadVoltage(&hi2c1, DevAddressPot1 , &Voltage);
-
+        I2C_ReadVoltage(&hi2c1, DevAddress1, &Voltage_M1);
 
         if (labs(error) <= tolerance) {
             motor1_set_state(MOTOR_STOP, MOTOR_SPEED);
@@ -151,56 +138,50 @@ void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance)
 
 void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance)
 {
+    uint16_t currentADC;
+    int32_t error;
+    uint32_t timeout_start = HAL_GetTick();
+    float Inst_Current;
 
-    uint16_t currentADC;                     //Local Variable to store the ADC of Motor
-    int32_t error;                           //Local Variable to store the difference between the ADC Values of target ADC and Current ADC
-    uint32_t timeout_start = HAL_GetTick();  //Starting the timer for a exit if the system fails
-    float Inst_PCurrent ;                    //Records the Instantaneous +15V Current of Motor inside the function
-    float Inst_NCurrent ;                    //Records the Instantaneous -15V Current of Motor inside the function
-    float Inst_PotCurrent ;                  //Records the Instantaneous Potentiometer Current inside the function
-	Max_PCurrent = 0 ;                       //Global Variable to store +15V Current reIntialized at the Start of the Function to be filled with the required values
-	Max_NCurrent = 0 ;                       //Global Variable to store -15V Current reIntialized at the Start of the Function to be filled with the required values
-	Voltage = 0 ;
+    // Use the global variables for Motor 2
+    Max_PCurrent_M2 = 0;
+    Max_NCurrent_M2 = 0;
+    Voltage_M2 = 0;
+
     while (1) {
-        currentADC = Pot1_2[1];
+        // --- CHANGES FOR MOTOR 2 ---
+        currentADC = Pot1_2[1]; // Use the second ADC channel
         error = (int32_t)targetADC - (int32_t)currentADC;
-        I2C_ReadCurrent(&hi2c1, DevAddress2P , &Inst_PCurrent );
-        if (Inst_PCurrent > Max_PCurrent )
-        {
-        	Max_PCurrent=Inst_PCurrent;   //Globally defined float Max_PCurrent = 0.0f We will use this to modify the Parameter array
+        I2C_ReadCurrent(&hi2c1, DevAddress2, &Inst_Current); // Use the I2C address for Motor 2 sensor
 
+        if (Inst_Current > 0) {
+            if (Inst_Current > Max_PCurrent_M2) {
+                Max_PCurrent_M2 = Inst_Current;
+            }
+        } else {
+            if (Inst_Current < Max_NCurrent_M2) {
+                Max_NCurrent_M2 = Inst_Current;
+            }
         }
-        I2C_ReadCurrent(&hi2c1, DevAddress2N , &Inst_NCurrent );
-        if (Inst_NCurrent > Max_NCurrent )
-        {
-        	Max_NCurrent=Inst_NCurrent;   //Globally defined float Max_NCurrent = 0.0f We will use this to modify the Parameter array
 
-        }
-        I2C_ReadCurrent(&hi2c1, DevAddressPot2 , &Inst_PotCurrent );
-        if (Inst_PotCurrent > Max_PotCurrent )
-        {
-        	Max_PotCurrent=Inst_PotCurrent;   //Globally defined float Max_PotCurrent = 0.0f We will use this to modify the Parameter array
-
-        }
-        I2C_ReadVoltage(&hi2c1, DevAddressPot2 , &Voltage);
-
+        I2C_ReadVoltage(&hi2c1, DevAddress2, &Voltage_M2); // Use the I2C address for Motor 2 sensor
 
         if (labs(error) <= tolerance) {
-            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED); // Use the function for Motor 2
             return;
         }
 
         if (error > 0) {
-            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED); //When this is called the motor should be moving in the direction in which the ADC is increasing
+            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED); // Use the function for Motor 2
         } else {
-            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED); // Use the function for Motor 2
         }
 
-        if (HAL_GetTick() - timeout_start > MOVE_TIMEOUT_MS) { // <<< CHANGED
-            motor2_set_state(MOTOR_STOP, MOTOR_SPEED);
+        if (HAL_GetTick() - timeout_start > MOVE_TIMEOUT_MS) {
+            motor2_set_state(MOTOR_STOP, MOTOR_SPEED); // Use the function for Motor 2
             return;
         }
-        HAL_Delay(LOOP_DELAY_MS); // <<< CHANGED
+        HAL_Delay(LOOP_DELAY_MS);
     }
 }
 
@@ -288,10 +269,10 @@ uint32_t ADC_MIN_TO_ADC_MAX_M1()
     uint32_t Motor1_Start = HAL_GetTick();
     moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
     uint32_t Motor1_End = HAL_GetTick();
-    parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent ;
-    parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent ;
-    parameters[PARAM_X1_24V_I_MIN_MAX] = Max_PotCurrent ;
-    parameters[PARAM_X1_MAX_POS_V] = Voltage;
+    parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent_M1 ;
+    parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent_M1 ;
+    //parameters[PARAM_X1_24V_I_MIN_MAX] = Max_PotCurrent ;
+    parameters[PARAM_X1_MAX_POS_V] = Voltage_M1;
     uint32_t time_taken = Motor1_End - Motor1_Start;
     moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
     return time_taken;
@@ -303,10 +284,10 @@ uint32_t ADC_MAX_TO_ADC_MIN_M1()
     uint32_t Motor1_Start = HAL_GetTick();
     moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
     uint32_t Motor1_End = HAL_GetTick();
-    parameters[PARAM_X1_P15V_I_MAX_MIN] = Max_PCurrent ;
-    parameters[PARAM_X1_N15V_I_MAX_MIN] = Max_NCurrent ;
-    parameters[PARAM_X1_24V_I_MAX_MIN] = Max_PotCurrent ;
-    parameters[PARAM_X1_MIN_POS_V] = Voltage;
+    parameters[PARAM_X1_P15V_I_MAX_MIN] = Max_PCurrent_M1 ;
+    parameters[PARAM_X1_N15V_I_MAX_MIN] = Max_NCurrent_M1 ;
+    //parameters[PARAM_X1_24V_I_MAX_MIN] = Max_PotCurrent ;
+    parameters[PARAM_X1_MIN_POS_V] = Voltage_M1;
     uint32_t time_taken = Motor1_End - Motor1_Start;
     moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
     return time_taken;
@@ -318,10 +299,10 @@ uint32_t ADC_MIN_TO_ADC_MAX_M2()
     uint32_t Motor2_Start = HAL_GetTick();
     moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC); // <<< CHANGED
     uint32_t Motor2_End = HAL_GetTick();
-    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent ;
-    parameters[PARAM_X2_N15V_I_MIN_MAX] = Max_NCurrent ;
-    parameters[PARAM_X2_24V_I_MIN_MAX] = Max_PotCurrent ;
-    parameters[PARAM_X2_MAX_POS_V] = Voltage;
+    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent_M2 ;
+    parameters[PARAM_X2_N15V_I_MIN_MAX] = Max_NCurrent_M2 ;
+    //parameters[PARAM_X2_24V_I_MIN_MAX] = Max_PotCurrent_M2 ;
+    parameters[PARAM_X2_MAX_POS_V] = Voltage_M2;
     uint32_t time_taken = Motor2_End - Motor2_Start;
     moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
     return time_taken;
@@ -333,10 +314,10 @@ uint32_t ADC_MAX_TO_ADC_MIN_M2()
     uint32_t Motor2_Start = HAL_GetTick();
     moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC); // <<< CHANGED
     uint32_t Motor2_End = HAL_GetTick();
-    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent ;
-    parameters[PARAM_X2_N15V_I_MAX_MIN] = Max_NCurrent ;
-    parameters[PARAM_X2_24V_I_MAX_MIN] = Max_PotCurrent ;
-    parameters[PARAM_X2_MIN_POS_V] = Voltage;
+    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent_M2 ;
+    parameters[PARAM_X2_N15V_I_MAX_MIN] = Max_NCurrent_M2 ;
+    //parameters[PARAM_X2_24V_I_MAX_MIN] = Max_PotCurrent_M2 ;
+    parameters[PARAM_X2_MIN_POS_V] = Voltage_M2;
     uint32_t time_taken = Motor2_End - Motor2_Start;
     moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC); // <<< CHANGED
     return time_taken;

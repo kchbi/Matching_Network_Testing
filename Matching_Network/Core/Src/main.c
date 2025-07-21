@@ -61,12 +61,22 @@ UART_HandleTypeDef huart2;
 // This is the one and only DEFINITION of the variable.
 // It tells the compiler to allocate memory for it.
 uint16_t volatile Pot1_2[2];
+//float Max_PCurrent = 0 ;
 // Application state variable
 volatile uint8_t g_test_is_running = 1;
 
 // Application data
 #define NUM_PARAMETERS 24
 float parameters[NUM_PARAMETERS] = {0.0f};
+
+float Max_PCurrent_M1 = 0.0f;
+float Max_NCurrent_M1 = 0.0f;
+float Voltage_M1      = 0.0f;
+
+
+float Max_PCurrent_M2 = 0.0f;
+float Max_NCurrent_M2 = 0.0f;
+float Voltage_M2      = 0.0f;
 
 #define DATA_LOG_LENGTH 32
 
@@ -125,16 +135,23 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_TIM1_Init();
-  uart_handler_init(&huart2);
   /* USER CODE BEGIN 2 */
+  uart_handler_init(&huart2); // When regenerated this line of Code would always reset need to add
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
-  if (I2C_Init(&hi2c1,DevAddress1P) != HAL_OK)
+  I2C_Scan(&hi2c1);
+  if (I2C_Init(&hi2c1,DevAddress1) != HAL_OK)
   {
 	  printf("Failed to Initalize the First Device \n");
   }
   printf("Initlization Successfull of First Device \n");
+  HAL_Delay(100);
+  if (I2C_Init(&hi2c1,DevAddress2) != HAL_OK)
+  {
+	  printf("Failed to Initalize the Second Device \n");
+  }
+  printf("Initlization Successfull of Second Device \n");
   HAL_Delay(100);
 
   /* USER CODE END 2 */
@@ -143,25 +160,29 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-      /* USER CODE BEGIN 3 */
-//	  motor1_set_state(MOTOR_FORWARD,199);
-//	  HAL_Delay(180);
-//	  motor1_set_state(MOTOR_REVERSE, 199);
-//	  HAL_Delay(180);
-//	  motor2_set_state(MOTOR_FORWARD,140);
-//	  HAL_Delay(180);
-//	  motor2_set_state(MOTOR_REVERSE, 140);
-//	  HAL_Delay(180);
+    /* USER CODE BEGIN 3 */
+//	  motor2_set_state(MOTOR_FORWARD,200);
+//	  HAL_Delay(150);
+//	  motor2_set_state(MOTOR_REVERSE,200);
+//	  HAL_Delay(150);
 
 
-//	  moveMotor1ToADCValue(ADC_POS_MAX,20);
-//	  moveMotor2ToADCValue(ADC_POS_MAX,20);
-//	  moveMotor1ToADCValue(ADC_POS_MIN,20);
-//	  moveMotor2ToADCValue(ADC_POS_MIN,20);
+
+//	  float Inst_PCurrent = 0;
+//      I2C_ReadCurrent(&hi2c1, DevAddress1P , &Inst_PCurrent );
+//      if (Inst_PCurrent > Max_PCurrent )
+//      {
+//      	Max_PCurrent=Inst_PCurrent;   //Globally defined float Max_PCurrent = 0.0f We will use this to modify the Parameter array
+//
+//      }
+
+//	  moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+//	  moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
 
 
+//	  parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
 
 	  printf("Testing the USB Communication \r\n");
 	    //--------------------------------------------------------------------
@@ -229,6 +250,7 @@ int main(void)
       // 2. STATE-BASED ACTION SECTION
       // ===================================================================
       if (g_test_is_running == 0) {
+    	  memset(parameters, 0, sizeof(parameters));
     	    // --- STATE: TEST ACTIVE ---
     	    // This block will run the full test sequence once per "START" command.
 
@@ -259,9 +281,9 @@ int main(void)
     	    // 2. Fill in all other placeholder parameters with a constant value (0.0).
     	    // This covers parameters for current and voltage which are not yet implemented.
     	    // Loop from index 4 to 19.
-    	    for (int i = 4; i < 20; i++) {
-    	        parameters[i] = 0.0f;
-    	    }
+//    	    for (int i = 4; i < 20; i++) {
+//    	        parameters[i] = 0.0f;
+//    	    }
 
 
     	    // 3. Send the complete data packet to the Python GUI.
@@ -312,12 +334,14 @@ int main(void)
           // --- STATE: IDLE ---
           printf("In Idle State Right Now test is not running \r\n");
           fflush(stdout); // It's good practice to flush after printing
+      }
 
           HAL_Delay(500);
-      }
-      /* USER CODE END 3 */
-  }
+
+    }
+  /* USER CODE END 3 */
 }
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -732,8 +756,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

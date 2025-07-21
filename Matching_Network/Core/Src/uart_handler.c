@@ -31,7 +31,7 @@ uint8_t uart_command_is_ready(void) {
     return g_command_received_flag;
 }
 
-const uint8_t* uart_get_command_buffer(void) {
+volatile uint8_t* uart_get_command_buffer(void) {
     return g_rx_buffer;
 }
 

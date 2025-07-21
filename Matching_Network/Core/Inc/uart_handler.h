@@ -27,7 +27,7 @@ uint8_t uart_command_is_ready(void);
  * @brief Gets a pointer to the received command buffer.
  * @retval A const pointer to the null-terminated command string.
  */
-const uint8_t* uart_get_command_buffer(void);
+volatile uint8_t* uart_get_command_buffer(void);
 
 /**
  * @brief Resets the command-ready flag and buffer for the next command.

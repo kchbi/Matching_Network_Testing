@@ -14,8 +14,8 @@
 // ===================================================================
 // 1. PUBLIC CONSTANTS
 // ===================================================================
-#define ADC_POS_MIN     (350)
-#define ADC_POS_MAX     (1400)
+#define ADC_POS_MIN     (520)
+#define ADC_POS_MAX     (2230)
 #define ADC_POS_HOME    ((ADC_POS_MIN + ADC_POS_MAX)/2)
 #define MOVE_TOLERANCE_ADC  (20)       // <<< CHANGED: Tolerance for reaching a position
 // ===================================================================
@@ -26,6 +26,8 @@
  *        Defined in main.c, declared here to be visible across files.
  */
 extern uint16_t volatile Pot1_2[2];
+extern float Max_PCurrent_M1, Max_NCurrent_M1, Voltage_M1;
+extern float Max_PCurrent_M2, Max_NCurrent_M2, Voltage_M2;
 
 /**
  * @brief Global variable to hold the result of the Test
