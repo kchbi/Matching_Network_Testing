@@ -14,7 +14,7 @@
 // ===================================================================
 // 1. PUBLIC CONSTANTS
 // ===================================================================
-#define ADC_POS_MIN     (520)
+#define ADC_POS_MIN     (530)
 #define ADC_POS_MAX     (2230)
 #define ADC_POS_HOME    ((ADC_POS_MIN + ADC_POS_MAX)/2)
 #define MOVE_TOLERANCE_ADC  (20)       // <<< CHANGED: Tolerance for reaching a position

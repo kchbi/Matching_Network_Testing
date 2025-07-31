@@ -20,8 +20,8 @@
 #define MOTOR2_IN1          GPIO_PIN_9
 #define MOTOR2_IN2          GPIO_PIN_11
 
-#define MOTOR_SPEED         (150)     //CHANGED: Centralized speed setting
-#define PWM_MAX_DUTY        (199)     //CHANGED: Matched to timer period for full range
+#define MOTOR_SPEED         (200)     //CHANGED: Centralized speed setting
+#define PWM_MAX_DUTY        (200)     //CHANGED: Matched to timer period for full range
 #define MOVE_TIMEOUT_MS     (5000)    //CHANGED: Timeout for any motor movement
 #define SETTLE_DELAY_MS     (100)     //CHANGED: Delay for motor to settle
 #define LOOP_DELAY_MS       (10)      //Delay in motor control loops
