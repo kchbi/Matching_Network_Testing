@@ -26,8 +26,8 @@
  *        Defined in main.c, declared here to be visible across files.
  */
 extern uint16_t volatile Pot1_2[2];
-extern float Max_PCurrent_M1, Max_NCurrent_M1, Voltage_M1;
-extern float Max_PCurrent_M2, Max_NCurrent_M2, Voltage_M2;
+extern float Max_PCurrent_M1, Max_NCurrent_M1, Voltage_M1 , Max_PoCurrent_M1;
+extern float Max_PCurrent_M2, Max_NCurrent_M2, Voltage_M2 , Max_PoCurrent_M2;
 
 /**
  * @brief Global variable to hold the result of the Test
