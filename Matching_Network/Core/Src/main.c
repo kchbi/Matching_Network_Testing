@@ -70,15 +70,15 @@ volatile uint8_t g_test_is_running = 1;
 float parameters[NUM_PARAMETERS] = {0.0f};
 
 float Max_PCurrent_M1 = 0.0f;
-float Max_NCurrent_M1 = 0.0f;
+//float Max_NCurrent_M1 = 0.0f;
 float Voltage_M1      = 0.0f;
-float Max_PoCurrent_M1 = 0.0f;
+//float Max_PoCurrent_M1 = 0.0f;
 
 
 float Max_PCurrent_M2 = 0.0f;
-float Max_NCurrent_M2 = 0.0f;
+//float Max_NCurrent_M2 = 0.0f;
 float Voltage_M2      = 0.0f;
-float Max_PoCurrent_M2 = 0.0f;
+//float Max_PoCurrent_M2 = 0.0f;
 
 #define DATA_LOG_LENGTH 32
 
@@ -146,30 +146,30 @@ int main(void)
   I2C_Scan(&hi2c1);
   HAL_Delay(1000);
 
-  if (I2C_Init(&hi2c1,Motor1N) != HAL_OK)
+  if (I2C_Init(&hi2c1,Motor1) != HAL_OK)
   {
 	  printf("Failed to Initalize the Motor1N \n");
   }
   printf("Initlization Successfull of Motor1N \n");
   HAL_Delay(100);
-  if (I2C_Init(&hi2c1,Motor1P) != HAL_OK)
-  {
-	  printf("Failed to Initalize the Motor1P \n");
-  }
-  printf("Initlization Successfull of Motor1P \n");
-  HAL_Delay(100);
-  if (I2C_Init(&hi2c1,Motor2N) != HAL_OK)
+//  if (I2C_Init(&hi2c1,Motor1P) != HAL_OK)
+//  {
+//	  printf("Failed to Initalize the Motor1P \n");
+//  }
+//  printf("Initlization Successfull of Motor1P \n");
+//  HAL_Delay(100);
+  if (I2C_Init(&hi2c1,Motor2) != HAL_OK)
   {
 	  printf("Failed to Initalize the Motor2N \n");
   }
   printf("Initlization Successfull of Motor2N \n");
   HAL_Delay(100);
-  if (I2C_Init(&hi2c1,Motor2P) != HAL_OK)
-  {
-	  printf("Failed to Initalize the Motor2P \n");
-  }
-  printf("Initlization Successfull of Motor2P \n");
-  HAL_Delay(100);
+//  if (I2C_Init(&hi2c1,Motor2P) != HAL_OK)
+//  {
+//	  printf("Failed to Initalize the Motor2P \n");
+//  }
+//  printf("Initlization Successfull of Motor2P \n");
+//  HAL_Delay(100);
   if (I2C_Init(&hi2c1,Pot1) != HAL_OK)
   {
 	  printf("Failed to Initalize the Pot1 \n");
@@ -273,10 +273,16 @@ int main(void)
     	    // Note: We cast the uint32_t time results to float to match the array type.
 
     	    // --- Time Tests ---
-    	    parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
-    	    parameters[PARAM_X1_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
-    	    parameters[PARAM_X2_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
-    	    parameters[PARAM_X2_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
+
+    	  parameters[PARAM_X1_MAX_POS_V] = FindMaxPositionVoltageMotor1() ;
+    	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
+    	  parameters[PARAM_X2_MIN_POS_V] = FindMinPositionVoltageMotor2() ;
+    	  parameters[PARAM_X2_MAX_POS_V] = FindMaxPositionVoltageMotor2() ;
+    	  Update_Home_Positions();
+    	  parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
+    	  parameters[PARAM_X1_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
+    	  parameters[PARAM_X2_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
+    	  parameters[PARAM_X2_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
     	    //----Current Test for Motors---
     	    // When I call the Above function it would also populate all of the parameters related to Current of Motors
     	    //---Current Test for Motors finished
@@ -318,30 +324,30 @@ int main(void)
     	    g_test_is_running = 1;
       } else if(g_test_is_running == 2){
     	  printf("Going to the First Corner i.e. min-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
+    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
     	  fflush(stdout);
     	  g_test_is_running = 1;
 
       } else if(g_test_is_running == 3){
     	  printf("Going to the Second Corner i.e. min-max \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
+    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
     	  fflush(stdout);
     	  g_test_is_running = 1;
 
       } else if(g_test_is_running == 4){
     	  printf("Going to the Third Corner i.e. max-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
+    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
     	  fflush(stdout);
     	  g_test_is_running = 1;
 
       } else if(g_test_is_running == 5){
     	  printf("Going to the Fourth Corner i.e. min-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
     	  HAL_Delay(2000);
-    	  moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
     	  fflush(stdout);
     	  g_test_is_running = 1;
       }

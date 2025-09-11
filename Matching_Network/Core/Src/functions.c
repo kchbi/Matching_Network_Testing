@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "i2ccomm.h"
+#include <math.h>
 
 // ===================================================================
 // 1. CONFIGURATION CONSTANTS (Refactored from hardcoded values)
@@ -26,6 +27,15 @@
 #define SETTLE_DELAY_MS     (100)     //CHANGED: Delay for motor to settle
 #define LOOP_DELAY_MS       (10)      //Delay in motor control loops
 
+uint16_t ADC_POS_MIN_M1 = 530;
+uint16_t ADC_POS_MAX_M1 = 2230;
+uint16_t ADC_POS_HOME_M1 = 0;
+
+
+
+uint16_t ADC_POS_MIN_M2 = 530;
+uint16_t ADC_POS_MAX_M2 = 2230;
+uint16_t ADC_POS_HOME_M2 = 0;
 
 extern I2C_HandleTypeDef hi2c1;
 // ===================================================================
@@ -81,6 +91,168 @@ void motor2_set_state(MotorDirection_t direction, uint32_t speed)
     }
 }
 
+
+/**
+ * @brief  Finds the maximum position for Motor 1 and updates the ADC_POS_MAX_M1 global variable.
+ * @retval The voltage at the maximum position, or -1.0f on timeout.
+ */
+float FindMaxPositionVoltageMotor1()
+{
+    uint16_t lastADC;
+    uint16_t currentADC;
+    uint16_t tolerance = 5;
+    float voltage_reading = -1.0f;
+    uint32_t start_tick = HAL_GetTick();
+
+    lastADC = Pot1_2[0];
+    motor1_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+
+    while (1)
+    {
+        HAL_Delay(100);
+        currentADC = Pot1_2[0];
+
+        if (abs(currentADC - lastADC) <= tolerance)
+        {
+            ADC_POS_MAX_M1 = currentADC; // Update with correct variable name
+            I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading);
+            break;
+        }
+
+        lastADC = currentADC;
+
+        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+        {
+            break;
+        }
+    }
+
+    motor1_set_state(MOTOR_STOP, 0);
+    return voltage_reading;
+}
+/**
+ * @brief  Finds the maximum position for Motor 2 and updates the ADC_POS_MAX_M2 global variable.
+ * @retval The voltage at the maximum position, or -1.0f on timeout.
+ */
+float FindMaxPositionVoltageMotor2()
+{
+    uint16_t lastADC;
+    uint16_t currentADC;
+    uint16_t tolerance = 5;
+    float voltage_reading = -1.0f;
+    uint32_t start_tick = HAL_GetTick();
+
+    lastADC = Pot1_2[1];
+    motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+
+    while (1)
+    {
+        HAL_Delay(100);
+        currentADC = Pot1_2[1];
+
+        if (abs(currentADC - lastADC) <= tolerance)
+        {
+            ADC_POS_MAX_M2 = currentADC; // Update with correct variable name
+            I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading);
+            break;
+        }
+
+        lastADC = currentADC;
+
+        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+        {
+            break;
+        }
+    }
+
+    motor2_set_state(MOTOR_STOP, 0);
+    return voltage_reading;
+}
+void Update_Home_Positions(void)
+{
+    ADC_POS_HOME_M1 = (ADC_POS_MIN_M1 + ADC_POS_MAX_M1) / 2;
+    ADC_POS_HOME_M2 = (ADC_POS_MIN_M2 + ADC_POS_MAX_M2) / 2;
+}
+
+/**
+ * @brief  Finds the minimum position for Motor 2 and updates the ADC_POS_MIN_M2 global variable.
+ * @retval The voltage at the minimum position, or -1.0f on timeout.
+ */
+float FindMinPositionVoltageMotor2()
+{
+    uint16_t lastADC;
+    uint16_t currentADC;
+    uint16_t tolerance = 5;
+    float voltage_reading = -1.0f;
+    uint32_t start_tick = HAL_GetTick();
+
+    lastADC = Pot1_2[1];
+    motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+
+    while (1)
+    {
+        HAL_Delay(100);
+        currentADC = Pot1_2[1];
+
+        if (abs(currentADC - lastADC) <= tolerance)
+        {
+            ADC_POS_MIN_M2 = currentADC; // Update with correct variable name
+            I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading);
+            break;
+        }
+
+        lastADC = currentADC;
+
+        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+        {
+            break;
+        }
+    }
+
+    motor2_set_state(MOTOR_STOP, 0);
+    return voltage_reading;
+}
+
+/**
+ * @brief  Finds the minimum position for Motor 1 and updates the ADC_POS_MIN_M1 global variable.
+ * @retval The voltage at the minimum position, or -1.0f on timeout.
+ */
+float FindMinPositionVoltageMotor1()
+{
+    uint16_t lastADC;
+    uint16_t currentADC;
+    uint16_t tolerance = 5;
+    float voltage_reading = -1.0f;
+    uint32_t start_tick = HAL_GetTick();
+
+    lastADC = Pot1_2[0];
+    motor1_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+
+    while (1)
+    {
+        HAL_Delay(100);
+        currentADC = Pot1_2[0];
+
+        if (abs(currentADC - lastADC) <= tolerance)
+        {
+            ADC_POS_MIN_M1 = currentADC; // Update with correct variable name
+            I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading);
+            break;
+        }
+
+        lastADC = currentADC;
+
+        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+        {
+            break;
+        }
+    }
+
+    motor1_set_state(MOTOR_STOP, 0);
+    return voltage_reading;
+}
+
+
 /**
  * @brief Moves Motor 1 to a specified ADC target position.
  * @param targetADC The target ADC value (position) to reach.
@@ -91,13 +263,12 @@ void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance)
     uint16_t currentADC;
     int32_t error;
     uint32_t timeout_start = HAL_GetTick();
-    float Inst_CurrentP;
-    float Inst_CurrentN;
+    float Inst_Current;
 
     // Reset the global variables for Motor 1 before starting the move
     Max_PCurrent_M1 = 0;
-    Max_NCurrent_M1 = 0;
-    Voltage_M1 = 0; // Assuming you have this variable as well
+//    Max_NCurrent_M1 = 0;
+//    Voltage_M1 = 0; // Assuming you have this variable as well
 
     while (1) {
         // --- FOR MOTOR 1: Read the potentiometer for Motor 1 ---
@@ -105,24 +276,24 @@ void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance)
         error = (int32_t)targetADC - (int32_t)currentADC;
 
         // --- FOR MOTOR 1: Read positive current and update max value ---
-        I2C_ReadCurrent(&hi2c1, Motor1P, &Inst_CurrentP);
+        I2C_ReadCurrent(&hi2c1, Motor1, &Inst_Current);
 
         // --- CORRECTED: Check the local variable 'Inst_CurrentP', not 'Inst_Current' ---
-        if (Inst_CurrentP > 0) {
-            if (Inst_CurrentP > Max_PCurrent_M1)
+        float Abs_Inst_Current = fabs(Inst_Current);
+            if (Abs_Inst_Current > Max_PCurrent_M1)
             {
-                Max_PCurrent_M1 = Inst_CurrentP;
+                Max_PCurrent_M1 = Abs_Inst_Current;
             }
-        }
 
-        // --- FOR MOTOR 1: Read negative current and update max value ---
-        I2C_ReadCurrent(&hi2c1, Motor1N, &Inst_CurrentN);
 
-        // --- CORRECTED: Check 'Inst_CurrentN' and update 'Max_NCurrent_M1' ---
-        if (Inst_CurrentN > Max_NCurrent_M1)
-        {
-            Max_NCurrent_M1 = Inst_CurrentN; // This now updates the correct variable
-        }
+//        // --- FOR MOTOR 1: Read negative current and update max value ---
+//        I2C_ReadCurrent(&hi2c1, Motor1N, &Inst_CurrentN);
+//
+//        // --- CORRECTED: Check 'Inst_CurrentN' and update 'Max_NCurrent_M1' ---
+//        if (Inst_CurrentN > Max_NCurrent_M1)
+//        {
+//            Max_NCurrent_M1 = Inst_CurrentN; // This now updates the correct variable
+//        }
 
         // Check if the motor is at the target position
         if (labs(error) <= tolerance) {
@@ -160,67 +331,49 @@ void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance)
     uint16_t currentADC;
     int32_t error;
     uint32_t timeout_start = HAL_GetTick();
-    float Inst_CurrentP;
-    float Inst_CurrentN;
-    //float Inst_CurrentPo;
+    float Inst_Current;
 
-    // Reset the correct global variables for Motor 2
+    // Reset the global variables for Motor 2 before starting the move
     Max_PCurrent_M2 = 0;
-    Max_NCurrent_M2 = 0;
-    Max_PoCurrent_M2 = 0;
-    Voltage_M2 = 0; // Assuming you have a voltage variable for motor 2
+    // Max_NCurrent_M2 = 0; // Assuming you have these for Motor 2
+    // Voltage_M2 = 0;
 
     while (1) {
-        // --- CHANGE: Read the potentiometer for Motor 2 ---
+        // --- FOR MOTOR 2: Read the potentiometer for Motor 2 ---
+        // Assuming Motor 2's pot is at index 1 of the array
         currentADC = Pot1_2[1];
         error = (int32_t)targetADC - (int32_t)currentADC;
 
-        // --- CHANGE: Use I2C addresses and global variables for Motor 2 ---
-        I2C_ReadCurrent(&hi2c1, Motor2P, &Inst_CurrentP);
+        // --- FOR MOTOR 2: Read current and update max value ---
+        // Assuming 'Motor2' is the I2C address #define for the second sensor
+        I2C_ReadCurrent(&hi2c1, Motor2, &Inst_Current);
 
-        // --- BUG FIX 1: Correctly check the local variable Inst_CurrentP ---
-        if (Inst_CurrentP > 0) {
-            if (Inst_CurrentP > Max_PCurrent_M2)
-            {
-                Max_PCurrent_M2 = Inst_CurrentP;
-            }
-        }
-
-        // --- CHANGE: Use I2C addresses for Motor 2 ---
-        I2C_ReadCurrent(&hi2c1, Motor2N, &Inst_CurrentN);
-
-        // --- BUG FIX 2 & CHANGE: Correctly check Inst_CurrentN and update Max_NCurrent_M2 ---
-        if (Inst_CurrentN > Max_NCurrent_M2)
+        // Calculate absolute current and update the max value for Motor 2
+        float Abs_Inst_Current = fabs(Inst_Current);
+        if (Abs_Inst_Current > Max_PCurrent_M2)
         {
-            Max_NCurrent_M2 = Inst_CurrentN;
+            Max_PCurrent_M2 = Abs_Inst_Current;
         }
-//        I2C_ReadCurrent(&hi2c1, Pot2, &Inst_CurrentPo);
-//
-//        // --- BUG FIX 2 & CHANGE: Correctly check Inst_CurrentN and update Max_NCurrent_M2 ---
-//        if (Inst_CurrentPo > Max_PoCurrent_M2)
-//        {
-//            Max_PoCurrent_M2 = Inst_CurrentPo;
-//        }
 
         // Check if the motor is at the target position
         if (labs(error) <= tolerance) {
-            motor2_set_state(MOTOR_STOP, MOTOR_SPEED); // CHANGE
-            return; // Exit the function
+            motor2_set_state(MOTOR_STOP, 0); // Use motor 2's control function
+            return; // Exit the function, move complete
         }
 
         // Move the motor in the correct direction
         if (error > 0) {
             // Target is greater than current, motor needs to move to increase ADC
-            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED); // CHANGE
+            motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED); // Use motor 2's control function
         } else {
             // Target is less than current, motor needs to move to decrease ADC
-            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED); // CHANGE
+            motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED); // Use motor 2's control function
         }
 
-        // Check for timeout
+        // Check for timeout to prevent the motor from running forever
         if (HAL_GetTick() - timeout_start > MOVE_TIMEOUT_MS) {
-            motor2_set_state(MOTOR_STOP, MOTOR_SPEED); // CHANGE
-            // Optionally, set an error flag here
+            motor2_set_state(MOTOR_STOP, 0); // Use motor 2's control function
+            // You might want to set an error flag here to indicate a timeout occurred
             return; // Exit the function
         }
 
@@ -305,155 +458,127 @@ void moveMotor2ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t ex
 // ===================================================================
 // 3. PUBLIC API FUNCTIONS (Declared in functions.h)
 // ===================================================================
-
 uint32_t ADC_MIN_TO_ADC_MAX_M1()
 {
-    float voltage_reading;
+    // float voltage_reading; // <<< REMOVED
 
-    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
     uint32_t Motor1_Start = HAL_GetTick();
-    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
     uint32_t Motor1_End = HAL_GetTick();
-
-    // <<< CORRECTED: Explicitly check for HAL_OK
-    if (I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading) == HAL_OK)
-    {
-        parameters[PARAM_X1_MAX_POS_V] = voltage_reading;
-    }
-
     parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent_M1;
-    parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent_M1;
-    //parameters[PARAM_X1_24V_I_MIN_MAX] = Max_PotCurrent;
 
     uint32_t time_taken = Motor1_End - Motor1_Start;
-    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_HOME_M1, MOVE_TOLERANCE_ADC);
     return time_taken;
 }
 
 uint32_t ADC_MAX_TO_ADC_MIN_M1()
 {
-    float voltage_reading;
+    // float voltage_reading; // <<< REMOVED
 
-    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
     uint32_t Motor1_Start = HAL_GetTick();
-    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
     uint32_t Motor1_End = HAL_GetTick();
 
-    // <<< CORRECTED: Explicitly check for HAL_OK
-    if (I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading) == HAL_OK)
-    {
-        parameters[PARAM_X1_MIN_POS_V] = voltage_reading;
-    }
-
     parameters[PARAM_X1_P15V_I_MAX_MIN] = Max_PCurrent_M1;
-    parameters[PARAM_X1_N15V_I_MAX_MIN] = Max_NCurrent_M1;
-    //parameters[PARAM_X1_24V_I_MAX_MIN] = Max_PotCurrent;
 
     uint32_t time_taken = Motor1_End - Motor1_Start;
-    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
-    return time_taken;
-}
-
-uint32_t ADC_MIN_TO_ADC_MAX_M2()
-{
-    float voltage_reading;
-
-    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
-    uint32_t Motor2_Start = HAL_GetTick();
-    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
-    uint32_t Motor2_End = HAL_GetTick();
-
-    // <<< CORRECTED: Explicitly check for HAL_OK
-    if (I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading) == HAL_OK)
-    {
-        parameters[PARAM_X2_MAX_POS_V] = voltage_reading;
-    }
-
-    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent_M2;
-    parameters[PARAM_X2_N15V_I_MIN_MAX] = Max_NCurrent_M2;
-    //parameters[PARAM_X2_24V_I_MIN_MAX] = Max_PotCurrent_M2;
-
-    uint32_t time_taken = Motor2_End - Motor2_Start;
-    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
-    return time_taken;
-}
-
-uint32_t ADC_MAX_TO_ADC_MIN_M2()
-{
-    float voltage_reading;
-
-    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
-    uint32_t Motor2_Start = HAL_GetTick();
-    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
-    uint32_t Motor2_End = HAL_GetTick();
-
-    // <<< CORRECTED: Explicitly check for HAL_OK
-    if (I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading) == HAL_OK)
-    {
-        parameters[PARAM_X2_MIN_POS_V] = voltage_reading;
-    }
-
-    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent_M2;
-    parameters[PARAM_X2_N15V_I_MAX_MIN] = Max_NCurrent_M2;
-    //parameters[PARAM_X2_24V_I_MAX_MIN] = Max_PotCurrent_M2;
-
-    uint32_t time_taken = Motor2_End - Motor2_Start;
-    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_HOME_M1, MOVE_TOLERANCE_ADC);
     return time_taken;
 }
 
 float Get_M1_Min_to_Max_Smoothness()
 {
     uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_M1();
-    moveMotor1ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
     HAL_Delay(SETTLE_DELAY_MS);
     int32_t max_error_in_adc;
-    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MAX, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MAX_M1, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX_M1 - ADC_POS_MIN_M1);
     if (total_distance == 0) return 0.0f;
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_HOME_M1, MOVE_TOLERANCE_ADC);
     return normalized_error;
 }
 
 float Get_M1_Max_to_Min_Smoothness(void)
 {
     uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_M1();
-    moveMotor1ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
     HAL_Delay(SETTLE_DELAY_MS);
     int32_t max_error_in_adc;
-    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MIN, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    moveMotor1ToADCValue_And_Measure_Smoothness(ADC_POS_MIN_M1, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX_M1 - ADC_POS_MIN_M1);
     if (total_distance == 0) return 0.0f;
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor1ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor1ToADCValue(ADC_POS_HOME_M1, MOVE_TOLERANCE_ADC);
     return normalized_error;
+}
+
+uint32_t ADC_MIN_TO_ADC_MAX_M2()
+{
+    // float voltage_reading; // <<< REMOVED
+
+    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+    uint32_t Motor2_Start = HAL_GetTick();
+    moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
+    uint32_t Motor2_End = HAL_GetTick();
+
+    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent_M2;
+
+    uint32_t time_taken = Motor2_End - Motor2_Start;
+    moveMotor2ToADCValue(ADC_POS_HOME_M2, MOVE_TOLERANCE_ADC);
+    return time_taken;
+}
+
+uint32_t ADC_MAX_TO_ADC_MIN_M2()
+{
+    // float voltage_reading; // <<< REMOVED
+
+    moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
+    uint32_t Motor2_Start = HAL_GetTick();
+    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+    uint32_t Motor2_End = HAL_GetTick();
+
+    // <<< REMOVED: This entire block was using the deleted variable
+    // if (I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading) == HAL_OK)
+    // {
+    //     parameters[PARAM_X2_MIN_POS_V] = voltage_reading;
+    // }
+
+    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent_M2;
+
+    uint32_t time_taken = Motor2_End - Motor2_Start;
+    moveMotor2ToADCValue(ADC_POS_HOME_M2, MOVE_TOLERANCE_ADC);
+    return time_taken;
 }
 
 float Get_M2_Min_to_Max_Smoothness()
 {
     uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_M2();
-    moveMotor2ToADCValue(ADC_POS_MIN, MOVE_TOLERANCE_ADC);
+    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
     HAL_Delay(SETTLE_DELAY_MS);
     int32_t max_error_in_adc;
-    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MAX, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MAX_M2, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX_M2 - ADC_POS_MIN_M2);
     if (total_distance == 0) return 0.0f;
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor2ToADCValue(ADC_POS_HOME_M2, MOVE_TOLERANCE_ADC);
     return normalized_error;
 }
 
 float Get_M2_Max_to_Min_Smoothness(void)
 {
     uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_M2();
-    moveMotor2ToADCValue(ADC_POS_MAX, MOVE_TOLERANCE_ADC);
+    moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
     HAL_Delay(SETTLE_DELAY_MS);
     int32_t max_error_in_adc;
-    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MIN, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX - ADC_POS_MIN);
+    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MIN_M2, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+    float total_distance = (float)(ADC_POS_MAX_M2 - ADC_POS_MIN_M2);
     if (total_distance == 0) return 0.0f;
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor2ToADCValue(ADC_POS_HOME, MOVE_TOLERANCE_ADC);
+    moveMotor2ToADCValue(ADC_POS_HOME_M2, MOVE_TOLERANCE_ADC);
     return normalized_error;
 }

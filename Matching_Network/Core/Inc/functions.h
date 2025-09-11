@@ -14,9 +14,15 @@
 // ===================================================================
 // 1. PUBLIC CONSTANTS
 // ===================================================================
-#define ADC_POS_MIN     (530)
-#define ADC_POS_MAX     (2230)
-#define ADC_POS_HOME    ((ADC_POS_MIN + ADC_POS_MAX)/2)
+extern uint16_t ADC_POS_MIN_M1;
+extern uint16_t ADC_POS_MAX_M1;
+
+extern uint16_t ADC_POS_MIN_M2;
+extern uint16_t ADC_POS_MAX_M2;
+
+extern uint16_t ADC_POS_HOME_M1;
+extern uint16_t ADC_POS_HOME_M1;
+
 #define MOVE_TOLERANCE_ADC  (20)       // <<< CHANGED: Tolerance for reaching a position
 // ===================================================================
 // 2. EXTERN VARIABLE DECLARATIONS
@@ -87,12 +93,16 @@ float Get_M2_Min_to_Max_Smoothness(void);
 float Get_M2_Max_to_Min_Smoothness(void);
 void motor1_set_state(MotorDirection_t direction, uint32_t speed);
 void motor2_set_state(MotorDirection_t direction, uint32_t speed);
+float FindMaxPositionVoltageMotor1();
+float FindMinPositionVoltageMotor1();
+float FindMaxPositionVoltageMotor2();
+float FindMinPositionVoltageMotor2();
 void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance);
 void moveMotor1ToADCValue(uint16_t targetADC, uint16_t tolerance);
 void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance);
 void moveMotor2ToADCValue(uint16_t targetADC, uint16_t tolerance);
 void moveMotor1ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t expected_duration_ms, uint16_t tolerance, int32_t* max_error_out);
 void moveMotor2ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t expected_duration_ms, uint16_t tolerance, int32_t* max_error_out);
-
+void Update_Home_Positions(void);
 
 #endif /* FUNCTIONS_H_ */

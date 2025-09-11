@@ -30,7 +30,7 @@ uint32_t Timeout = 100 ;
 #define VoltageAddress 0x02
 #define CurrentAddress 0x04
 #define ConfigSettings 0x4527
-const float Maximum_Expected_Current = 1;
+const float Maximum_Expected_Current = 0.5f;
 const float Shunt_Resistor_Value = 0.1f ;
 const float Current_LSB = Maximum_Expected_Current/32768.0f;
 const float calculated_cal_float = 0.00512f / (Current_LSB * Shunt_Resistor_Value);

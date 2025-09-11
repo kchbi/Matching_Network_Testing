@@ -10,10 +10,10 @@
 
 #include "stm32f4xx_hal.h"
 
-#define Motor1N      (0x45)
-#define Motor1P      (0x40)
-#define Motor2N      (0x44)
-#define Motor2P      (0x41)
+#define Motor1      (0x45)
+//#define Motor1P      (0x40)
+//#define Motor2N      (0x44)
+#define Motor2     (0x41)
 #define Pot1         (0x4C)
 #define Pot2         (0x42)
 
