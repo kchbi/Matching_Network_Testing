@@ -196,10 +196,10 @@ int main(void)
 
 
 	  printf("Testing the USB Communication \r\n");
-//	  motor1_set_state(MOTOR_FORWARD,200);
-//	  HAL_Delay(2000);
-//	  motor2_set_state(MOTOR_REVERSE,200);
-//	  HAL_Delay(2000);
+//	  motor1_set_state(MOTOR_STOP,200);
+////	  HAL_Delay(2000);
+//	  motor2_set_state(MOTOR_STOP,200);
+////	  HAL_Delay(2000);
 	    //--------------------------------------------------------------------
 	    // [SECTION 1] COMMAND HANDLING
 	    //--------------------------------------------------------------------
