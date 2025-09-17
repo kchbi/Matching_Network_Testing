@@ -46,6 +46,13 @@ extern float parameters[NUM_PARAMETERS];
 // ===================================================================
 // 3. PUBLIC DATA TYPES
 // ===================================================================
+
+typedef enum {
+    MOTOR_STOP,
+    MOTOR_FORWARD,
+    MOTOR_REVERSE
+} MotorDirection_t;
+
 typedef enum {
     RELAY_ON,
     RELAY_OFF
@@ -54,7 +61,8 @@ typedef enum {
 typedef enum {
 	RELAY_1,
 	RELAY_2,
-	RELAY_3
+	RELAY_3,
+	RELAY_4
 }Relay_ID_t;
 
 
@@ -94,7 +102,7 @@ uint32_t ADC_MIN_TO_ADC_MAX_M2(void);
 uint32_t ADC_MAX_TO_ADC_MIN_M2(void);
 
 void relay_set_state(Relay_ID_t relayID, Relay_State_t state);
-
+void reset_out_pin()
 float Get_M1_Min_to_Max_Smoothness(void);
 float Get_M1_Max_to_Min_Smoothness(void);
 float Get_M2_Min_to_Max_Smoothness(void);

@@ -43,6 +43,78 @@ extern I2C_HandleTypeDef hi2c1;
 // ===================================================================
 // These functions are only used inside this file.
 
+void reset_out_pin()
+{
+    HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_RESET);
+
+
+}
+
+/**
+ * @brief Sets the state of a specific relay using an L298N driver.
+ * @param relayID The identifier of the relay to control.
+ * @param state The desired state (Energized or De-energized).
+ */
+void relay_set_state(Relay_ID_t relayID, Relay_State_t state)
+{
+    switch (relayID)
+    {
+        case RELAY_1:
+            if (state == RELAY_STATE_ENERGIZED) {
+                // Set IN1 HIGH, IN2 LOW to activate relay
+                HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_SET);
+
+            } else {
+                // Set both LOW to deactivate
+                HAL_GPIO_WritePin(GPIOE, RELAY1_IN1_PIN, GPIO_PIN_RESET);
+
+            }
+            break;
+
+        case RELAY_2:
+            if (state == RELAY_STATE_ENERGIZED) {
+                // Set IN3 HIGH, IN4 LOW to activate relay
+                HAL_GPIO_WritePin(GPIOE, RELAY2_IN3_PIN, GPIO_PIN_SET);
+
+            } else {
+                // Set both LOW to deactivate
+                HAL_GPIO_WritePin(GPIOE, RELAY2_IN3_PIN, GPIO_PIN_RESET);
+
+            }
+            break;
+
+        case RELAY_3:
+            if (state == RELAY_STATE_ENERGIZED) {
+                // Set IN1 HIGH, IN2 LOW on the second L298N to activate relay
+                HAL_GPIO_WritePin(GPIOE, RELAY3_IN1_PIN, GPIO_PIN_SET);
+            } else {
+                // Set both LOW to deactivate
+                HAL_GPIO_WritePin(GPIOE, RELAY3_IN1_PIN, GPIO_PIN_RESET);
+
+            }
+            break;
+
+        case RELAY_4 :
+            if (state == RELAY_STATE_ENERGIZED) {
+                // Set IN1 HIGH, IN2 LOW on the second L298N to activate relay
+                HAL_GPIO_WritePin(GPIOE, RELAY3_IN1_PIN, GPIO_PIN_SET);
+            } else {
+                // Set both LOW to deactivate
+                HAL_GPIO_WritePin(GPIOE, RELAY3_IN1_PIN, GPIO_PIN_RESET);
+            }
+            break;
+        default:
+            // Handle error case if necessary
+            break;
+    }
+}
+
+
+
+
 void motor1_set_state(MotorDirection_t direction, uint32_t speed)
 {
     if (speed > PWM_MAX_DUTY) {

@@ -34,37 +34,37 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Matching_Network
+BUILD_ARTIFACT_NAME := RelayMatching_Network
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Matching_Network.elf \
+RelayMatching_Network.elf \
 
 MAP_FILES += \
-Matching_Network.map \
+RelayMatching_Network.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Matching_Network.list \
+RelayMatching_Network.list \
 
 OBJCOPY_HEX += \
-Matching_Network.hex \
+RelayMatching_Network.hex \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Matching_Network.elf secondary-outputs
+main-build: RelayMatching_Network.elf secondary-outputs
 
 # Tool invocations
-Matching_Network.elf Matching_Network.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\OneDrive\ -\ Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Matching_Network.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\OneDrive - Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\Matching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Matching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RelayMatching_Network.elf RelayMatching_Network.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\OneDrive\ -\ Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\RelayMatching_Network\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RelayMatching_Network.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\OneDrive - Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\RelayMatching_Network\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RelayMatching_Network.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -73,19 +73,19 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Matching_Network.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Matching_Network.list"
+RelayMatching_Network.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RelayMatching_Network.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Matching_Network.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "Matching_Network.hex"
+RelayMatching_Network.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "RelayMatching_Network.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Matching_Network.elf Matching_Network.hex Matching_Network.list Matching_Network.map default.size.stdout
+	-$(RM) RelayMatching_Network.elf RelayMatching_Network.hex RelayMatching_Network.list RelayMatching_Network.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)
