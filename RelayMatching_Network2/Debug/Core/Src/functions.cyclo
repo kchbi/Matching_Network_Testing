@@ -1,0 +1,10 @@
+../Core/Src/functions.c:63:6:relay_reset	1
+../Core/Src/functions.c:72:6:relay_set_state	5
+../Core/Src/functions.c:86:13:set_relay_combination	1
+../Core/Src/functions.c:104:19:Calibrate_And_Find_Ranges	6
+../Core/Src/functions.c:154:10:Measure_Settle_Time_Min_To_Max	7
+../Core/Src/functions.c:209:10:Measure_Settle_Time_Max_To_Min	7
+../Core/Src/functions.c:262:10:Measure_State_Repeatability_Min	2
+../Core/Src/functions.c:295:13:Measure_Transition_Deviation	8
+../Core/Src/functions.c:349:7:Get_Relay_Min_to_Max_Overshoot_Error	4
+../Core/Src/functions.c:381:7:Get_Relay_Max_to_Min_Undershoot_Error	4
