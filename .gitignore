@@ -1,0 +1,13 @@
+# Ignore STM32CubeIDE workspace settings
+.metadata/
+
+# Ignore build output folders
+Debug/
+Release/
+build/
+
+# Ignore generated binary files
+*.elf
+*.bin
+*.hex
+*.map 
