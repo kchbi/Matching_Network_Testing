@@ -52,6 +52,12 @@ default.size.stdout \
 OBJDUMP_LIST += \
 PotentioMeterCalibration.list \
 
+OBJCOPY_HEX += \
+PotentioMeterCalibration.hex \
+
+OBJCOPY_BIN += \
+PotentioMeterCalibration.bin \
+
 
 # All Target
 all: main-build
@@ -60,8 +66,8 @@ all: main-build
 main-build: PotentioMeterCalibration.elf secondary-outputs
 
 # Tool invocations
-PotentioMeterCalibration.elf PotentioMeterCalibration.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\OneDrive\ -\ Skylinesemi\Desktop\stm32workspace\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "PotentioMeterCalibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\OneDrive - Skylinesemi\Desktop\stm32workspace\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PotentioMeterCalibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+PotentioMeterCalibration.elf PotentioMeterCalibration.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\OneDrive\ -\ Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "PotentioMeterCalibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\OneDrive - Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PotentioMeterCalibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,12 +81,22 @@ PotentioMeterCalibration.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_T
 	@echo 'Finished building: $@'
 	@echo ' '
 
+PotentioMeterCalibration.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "PotentioMeterCalibration.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+PotentioMeterCalibration.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "PotentioMeterCalibration.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) PotentioMeterCalibration.elf PotentioMeterCalibration.list PotentioMeterCalibration.map default.size.stdout
+	-$(RM) PotentioMeterCalibration.bin PotentioMeterCalibration.elf PotentioMeterCalibration.hex PotentioMeterCalibration.list PotentioMeterCalibration.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

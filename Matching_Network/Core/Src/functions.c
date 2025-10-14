@@ -43,59 +43,151 @@ extern I2C_HandleTypeDef hi2c1;
 // ===================================================================
 // These functions are only used inside this file.
 
-void motor1_set_state(MotorDirection_t direction, uint32_t speed)
+//void motor1_set_state(MotorDirection_t direction, uint32_t speed)
+//{
+//    if (speed > PWM_MAX_DUTY) {
+//        speed = PWM_MAX_DUTY;
+//    }
+//    switch (direction) {
+//        case MOTOR_FORWARD:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
+//            TIM1->CCR1 = speed;
+//            break;
+//        case MOTOR_REVERSE:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+//            TIM1->CCR1 = speed;
+//            break;
+//        case MOTOR_STOP:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+//            TIM1->CCR1 = speed;
+//            break;
+//    }
+//}
+
+void motor1_set_state(uint32_t speed)
 {
-    if (speed > PWM_MAX_DUTY) {
-        speed = PWM_MAX_DUTY;
-    }
-    switch (direction) {
-        case MOTOR_FORWARD:
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
-            TIM1->CCR1 = speed;
-            break;
-        case MOTOR_REVERSE:
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
-            TIM1->CCR1 = speed;
-            break;
-        case MOTOR_STOP:
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
-            TIM1->CCR1 = speed;
-            break;
-    }
+	if (speed > 0 ){
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_RESET);
+		if(speed > PWM_MAX_DUTY){
+			speed = PWM_MAX_DUTY;
+		}
+		TIM1->CCR1 = speed;
+		return;
+	}
+	else if(speed < 0) {
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+        speed = -speed ;
+		if(speed > PWM_MAX_DUTY){
+			speed = PWM_MAX_DUTY;
+		}
+		TIM1->CCR1 = speed;
+		return;
+	}
+	else{
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN1, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR1_IN2, GPIO_PIN_SET);
+        TIM1->CCR1 = 0;
+        return;
+	}
 }
 
-void motor2_set_state(MotorDirection_t direction, uint32_t speed)
+//void motor2_set_state(MotorDirection_t direction, uint32_t speed)
+//{
+//    if (speed > PWM_MAX_DUTY) {
+//        speed = PWM_MAX_DUTY;
+//    }
+//    switch (direction) {
+//        case MOTOR_FORWARD:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
+//            TIM2->CCR1 = speed;
+//            break;
+//        case MOTOR_REVERSE:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+//            TIM2->CCR1 = speed;
+//            break;
+//        case MOTOR_STOP:
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+//            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+//            TIM2->CCR1 = speed;
+//            break;
+//    }
+//}
+//
+
+void motor2_set_state(uint32_t speed)
 {
-    if (speed > PWM_MAX_DUTY) {
-        speed = PWM_MAX_DUTY;
-    }
-    switch (direction) {
-        case MOTOR_FORWARD:
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
-            TIM2->CCR1 = speed;
-            break;
-        case MOTOR_REVERSE:
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
-            TIM2->CCR1 = speed;
-            break;
-        case MOTOR_STOP:
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
-            TIM2->CCR1 = speed;
-            break;
-    }
+	if (speed > 0 ){
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_RESET);
+		if(speed > PWM_MAX_DUTY){
+			speed = PWM_MAX_DUTY;
+		}
+		TIM2->CCR1 = speed;
+		return;
+	}
+	else if(speed < 0) {
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+        speed = -speed ;
+		if(speed > PWM_MAX_DUTY){
+			speed = PWM_MAX_DUTY;
+		}
+		TIM2->CCR1 = speed;
+		return;
+	}
+	else{
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN1, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOE, MOTOR2_IN2, GPIO_PIN_SET);
+        TIM2->CCR1 = 0;
+        return;
+	}
 }
-
-
 /**
  * @brief  Finds the maximum position for Motor 1 and updates the ADC_POS_MAX_M1 global variable.
  * @retval The voltage at the maximum position, or -1.0f on timeout.
  */
+//float FindMaxPositionVoltageMotor1()
+//{
+//    uint16_t lastADC;
+//    uint16_t currentADC;
+//    uint16_t tolerance = 5;
+//    float voltage_reading = -1.0f;
+//    uint32_t start_tick = HAL_GetTick();
+//
+//    lastADC = Pot1_2[0];
+//    motor1_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+//
+//    while (1)
+//    {
+//        HAL_Delay(100);
+//        currentADC = Pot1_2[0];
+//
+//        if (abs(currentADC - lastADC) <= tolerance)
+//        {
+//            ADC_POS_MAX_M1 = currentADC; // Update with correct variable name
+//            I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading);
+//            break;
+//        }
+//
+//        lastADC = currentADC;
+//
+//        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+//        {
+//            break;
+//        }
+//    }
+//
+//    motor1_set_state(MOTOR_STOP, 0);
+//    return voltage_reading;
+//}
+
 float FindMaxPositionVoltageMotor1()
 {
     uint16_t lastADC;
@@ -105,7 +197,7 @@ float FindMaxPositionVoltageMotor1()
     uint32_t start_tick = HAL_GetTick();
 
     lastADC = Pot1_2[0];
-    motor1_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+    motor1_set_state(MOTOR_SPEED);
 
     while (1)
     {
@@ -127,13 +219,48 @@ float FindMaxPositionVoltageMotor1()
         }
     }
 
-    motor1_set_state(MOTOR_STOP, 0);
+    motor1_set_state(0);
     return voltage_reading;
 }
 /**
  * @brief  Finds the maximum position for Motor 2 and updates the ADC_POS_MAX_M2 global variable.
  * @retval The voltage at the maximum position, or -1.0f on timeout.
  */
+//float FindMaxPositionVoltageMotor2()
+//{
+//    uint16_t lastADC;
+//    uint16_t currentADC;
+//    uint16_t tolerance = 5;
+//    float voltage_reading = -1.0f;
+//    uint32_t start_tick = HAL_GetTick();
+//
+//    lastADC = Pot1_2[1];
+//    motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+//
+//    while (1)
+//    {
+//        HAL_Delay(100);
+//        currentADC = Pot1_2[1];
+//
+//        if (abs(currentADC - lastADC) <= tolerance)
+//        {
+//            ADC_POS_MAX_M2 = currentADC; // Update with correct variable name
+//            I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading);
+//            break;
+//        }
+//
+//        lastADC = currentADC;
+//
+//        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+//        {
+//            break;
+//        }
+//    }
+//
+//    motor2_set_state(MOTOR_STOP, 0);
+//    return voltage_reading;
+//}
+
 float FindMaxPositionVoltageMotor2()
 {
     uint16_t lastADC;
@@ -143,7 +270,7 @@ float FindMaxPositionVoltageMotor2()
     uint32_t start_tick = HAL_GetTick();
 
     lastADC = Pot1_2[1];
-    motor2_set_state(MOTOR_FORWARD, MOTOR_SPEED);
+    motor2_set_state(MOTOR_SPEED);
 
     while (1)
     {
@@ -165,7 +292,7 @@ float FindMaxPositionVoltageMotor2()
         }
     }
 
-    motor2_set_state(MOTOR_STOP, 0);
+    motor2_set_state(0);
     return voltage_reading;
 }
 void Update_Home_Positions(void)
@@ -178,6 +305,40 @@ void Update_Home_Positions(void)
  * @brief  Finds the minimum position for Motor 2 and updates the ADC_POS_MIN_M2 global variable.
  * @retval The voltage at the minimum position, or -1.0f on timeout.
  */
+//float FindMinPositionVoltageMotor2()
+//{
+//    uint16_t lastADC;
+//    uint16_t currentADC;
+//    uint16_t tolerance = 5;
+//    float voltage_reading = -1.0f;
+//    uint32_t start_tick = HAL_GetTick();
+//
+//    lastADC = Pot1_2[1];
+//    motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+//
+//    while (1)
+//    {
+//        HAL_Delay(100);
+//        currentADC = Pot1_2[1];
+//
+//        if (abs(currentADC - lastADC) <= tolerance)
+//        {
+//            ADC_POS_MIN_M2 = currentADC; // Update with correct variable name
+//            I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading);
+//            break;
+//        }
+//
+//        lastADC = currentADC;
+//
+//        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+//        {
+//            break;
+//        }
+//    }
+//
+//    motor2_set_state(MOTOR_STOP, 0);
+//    return voltage_reading;
+//}
 float FindMinPositionVoltageMotor2()
 {
     uint16_t lastADC;
@@ -187,7 +348,7 @@ float FindMinPositionVoltageMotor2()
     uint32_t start_tick = HAL_GetTick();
 
     lastADC = Pot1_2[1];
-    motor2_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+    motor2_set_state(-MOTOR_SPEED);
 
     while (1)
     {
@@ -209,14 +370,48 @@ float FindMinPositionVoltageMotor2()
         }
     }
 
-    motor2_set_state(MOTOR_STOP, 0);
+    motor2_set_state(0);
     return voltage_reading;
 }
-
 /**
  * @brief  Finds the minimum position for Motor 1 and updates the ADC_POS_MIN_M1 global variable.
  * @retval The voltage at the minimum position, or -1.0f on timeout.
  */
+//float FindMinPositionVoltageMotor1()
+//{
+//    uint16_t lastADC;
+//    uint16_t currentADC;
+//    uint16_t tolerance = 5;
+//    float voltage_reading = -1.0f;
+//    uint32_t start_tick = HAL_GetTick();
+//
+//    lastADC = Pot1_2[0];
+//    motor1_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+//
+//    while (1)
+//    {
+//        HAL_Delay(100);
+//        currentADC = Pot1_2[0];
+//
+//        if (abs(currentADC - lastADC) <= tolerance)
+//        {
+//            ADC_POS_MIN_M1 = currentADC; // Update with correct variable name
+//            I2C_ReadVoltage(&hi2c1, Pot1, &voltage_reading);
+//            break;
+//        }
+//
+//        lastADC = currentADC;
+//
+//        if ((HAL_GetTick() - start_tick) > MOVE_TIMEOUT_MS)
+//        {
+//            break;
+//        }
+//    }
+//
+//    motor1_set_state(MOTOR_STOP, 0);
+//    return voltage_reading;
+//}
+
 float FindMinPositionVoltageMotor1()
 {
     uint16_t lastADC;
@@ -226,7 +421,7 @@ float FindMinPositionVoltageMotor1()
     uint32_t start_tick = HAL_GetTick();
 
     lastADC = Pot1_2[0];
-    motor1_set_state(MOTOR_REVERSE, MOTOR_SPEED);
+    motor1_set_state(-MOTOR_SPEED);
 
     while (1)
     {
@@ -248,7 +443,7 @@ float FindMinPositionVoltageMotor1()
         }
     }
 
-    motor1_set_state(MOTOR_STOP, 0);
+    motor1_set_state(0);
     return voltage_reading;
 }
 

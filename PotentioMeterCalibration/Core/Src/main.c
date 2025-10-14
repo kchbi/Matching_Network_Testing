@@ -226,7 +226,6 @@ int main(void)
 
 	      	    // 4. IMPORTANT: Stop the test from running again until the next command.
 	      	    // If you remove this line, the test will run over and over.
-	      	    g_test_is_running = 1;
 	        }
 	        else {
 	            // --- STATE: IDLE ---
