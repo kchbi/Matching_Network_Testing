@@ -275,7 +275,7 @@ int main(void)
     	    // --- Time Tests ---
 
     	  parameters[PARAM_X1_MAX_POS_V] = FindMaxPositionVoltageMotor1() ;
-    	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
+     	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
     	  parameters[PARAM_X2_MIN_POS_V] = FindMinPositionVoltageMotor2() ;
     	  parameters[PARAM_X2_MAX_POS_V] = FindMaxPositionVoltageMotor2() ;
     	  Update_Home_Positions();
@@ -743,10 +743,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_11, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PE7 PE8 PE9 PE11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_11;
+  /*Configure GPIO pins : PE7 PE8 PE9 PE10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
