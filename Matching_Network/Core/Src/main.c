@@ -193,13 +193,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-
+//	  for(int32_t i = 0 ; i < 200;i = i+5){
+//		  motor2_set_state(i);
+//	  }
 
 	  printf("Testing the USB Communication \r\n");
-//	  motor1_set_state(MOTOR_STOP,200);
-////	  HAL_Delay(2000);
-//	  motor2_set_state(MOTOR_STOP,200);
-////	  HAL_Delay(2000);
+
 	    //--------------------------------------------------------------------
 	    // [SECTION 1] COMMAND HANDLING
 	    //--------------------------------------------------------------------
@@ -275,8 +274,8 @@ int main(void)
     	    // --- Time Tests ---
 
     	  parameters[PARAM_X1_MAX_POS_V] = FindMaxPositionVoltageMotor1() ;
-     	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
     	  parameters[PARAM_X2_MIN_POS_V] = FindMinPositionVoltageMotor2() ;
+     	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
     	  parameters[PARAM_X2_MAX_POS_V] = FindMaxPositionVoltageMotor2() ;
     	  Update_Home_Positions();
     	  parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;

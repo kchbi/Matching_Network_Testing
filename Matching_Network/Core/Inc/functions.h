@@ -34,6 +34,8 @@ extern uint16_t ADC_POS_HOME_M1;
 extern uint16_t volatile Pot1_2[2];
 extern float Max_PCurrent_M1, Max_NCurrent_M1, Voltage_M1 , Max_PoCurrent_M1;
 extern float Max_PCurrent_M2, Max_NCurrent_M2, Voltage_M2 , Max_PoCurrent_M2;
+extern float Kp, Kd, Ki ;
+extern int32_t PWM_MIN_DUTY ;
 
 /**
  * @brief Global variable to hold the result of the Test
@@ -91,8 +93,8 @@ float Get_M1_Min_to_Max_Smoothness(void);
 float Get_M1_Max_to_Min_Smoothness(void);
 float Get_M2_Min_to_Max_Smoothness(void);
 float Get_M2_Max_to_Min_Smoothness(void);
-void motor1_set_state(int32_t speed);
-void motor2_set_state(int32_t speed);
+void motor1_set_state(float speed);
+void motor2_set_state(float speed);
 float FindMaxPositionVoltageMotor1();
 float FindMinPositionVoltageMotor1();
 float FindMaxPositionVoltageMotor2();
