@@ -62,7 +62,7 @@ UART_HandleTypeDef huart2;
 
 // This is the one and only DEFINITION of the variable.
 // It tells the compiler to allocate memory for it.
-uint16_t volatile Pot1_2[2];
+uint16_t volatile ADC_IN[9];
 //float Max_PCurrent = 0 ;
 // Application state variable
 volatile uint8_t g_test_is_running = 1;
@@ -144,7 +144,7 @@ int main(void)
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
   uart_handler_init(&huart2); // When regenerated this line of Code would always reset need to add
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_IN, 9);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
   I2C_Scan(&hi2c1);
