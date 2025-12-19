@@ -40,13 +40,13 @@
 #define SETTLE_DELAY_MS     (100)     //CHANGED: Delay for motor to settle
 #define LOOP_DELAY_MS       (1)      //Delay in motor control loops
 
-uint16_t POS_MIN_TUNE = 530;
-uint16_t POS_MAX_TUNE = 2230;
-uint16_t POS_HOME_TUNE = 0;
+uint16_t POS_MIN_TUNE = 0;
+uint16_t POS_MAX_TUNE = 10;
+uint16_t POS_HOME_TUNE = 5;
 
-uint16_t POS_MIN_LOAD = 530;
-uint16_t POS_MAX_LOAD = 2230;
-uint16_t POS_HOME_LOAD = 0;
+uint16_t POS_MIN_LOAD = 0;
+uint16_t POS_MAX_LOAD = 10;
+uint16_t POS_HOME_LOAD = 5;
 
 extern I2C_HandleTypeDef hi2c1;
 
@@ -87,16 +87,16 @@ void TuneCoil(float targetPos,uint16_t targetADC)
     float Inst_Current;
     float Abs_Inst_Current_P;
     float Abs_Inst_Current_N;
-    Max_PCurrent_Coil = 0;
-    Max_NCurrent_Coil = 0;
+    Max_PCurrent_Tune = 0;
+    Max_NCurrent_Tune = 0;
     while (1) {
         // --- Read current for monitoring ---
         I2C_ReadCurrent(&hi2c1, P15, &Inst_Current);
-        float Abs_Inst_Current_P = fabs(Inst_Current);
+        Abs_Inst_Current_P = fabs(Inst_Current);
         if (Abs_Inst_Current_P > Max_PCurrent_Tune)
             Max_PCurrent_Tune = Abs_Inst_Current_P;
         I2C_ReadCurrent(&hi2c1, N15, &Inst_Current);
-        float Abs_Inst_Current_N = fabs(Inst_Current);
+        Abs_Inst_Current_N = fabs(Inst_Current);
         if (Abs_Inst_Current_N > Max_NCurrent_Tune)
             Max_NCurrent_Tune = Abs_Inst_Current_N;
         // --- Read current position ---
@@ -128,6 +128,7 @@ void LoadCoil(float targetPos, uint16_t targetADC)
     uint16_t currentADC = 0;
     int32_t error = 0;
     uint32_t timeout_start = HAL_GetTick();
+    float Inst_Current;
     float Abs_Inst_Current_P;
     float Abs_Inst_Current_N;
     Max_PCurrent_Coil = 0;
@@ -137,11 +138,11 @@ void LoadCoil(float targetPos, uint16_t targetADC)
     while (1) {
         // --- Read current for monitoring ---
         I2C_ReadCurrent(&hi2c1, P15, &Inst_Current);
-        float Abs_Inst_Current_P = fabs(Inst_Current);
+        Abs_Inst_Current_P = fabs(Inst_Current);
         if (Abs_Inst_Current_P > Max_PCurrent_Coil)
             Max_PCurrent_Coil = Abs_Inst_Current_P;
         I2C_ReadCurrent(&hi2c1, N15, &Inst_Current);
-        float Abs_Inst_Current_N = fabs(Inst_Current);
+        Abs_Inst_Current_N = fabs(Inst_Current);
         if (Abs_Inst_Current_N > Max_NCurrent_Coil)
             Max_NCurrent_Coil = Abs_Inst_Current_N;
         // --- Read current position ---
@@ -268,121 +269,197 @@ void LoadCoilSmoothness(float voltage,uint16_t targetADC, uint32_t expected_dura
 // ===================================================================
 uint32_t ADC_MIN_TO_ADC_MAX_TUNE()
 {
-    // float voltage_reading; // <<< REMOVED
+    // Move to min first
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
 
-    TuneCoil(POS_MIN_TUNE);
     uint32_t timer_Start = HAL_GetTick();
-    TuneCoil(POS_MAX_M1);
+
+    // Move to max
+    TuneCoil(POS_MAX_TUNE, ADC_POS_MAX_TUNE);
+
     uint32_t timer_End = HAL_GetTick();
+
     parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent_Tune;
     parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent_Tune;
 
     uint32_t time_taken = timer_End - timer_Start;
-    TuneCoil(ADC_POS_MIN_M1);
+
+    // Return to min
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
+
     return time_taken;
 }
 
+
 uint32_t ADC_MAX_TO_ADC_MIN_TUNE()
 {
-    TuneCoil(POS_MAX_TUNE);
-    uint32_t Timer_Start = HAL_GetTick();
-    TuneCoil(POS_MIN_TUNE);
-    uint32_t Timer_End = HAL_GetTick();
+    // Move to max first
+    TuneCoil(POS_MAX_TUNE, ADC_POS_MAX_TUNE);
+
+    uint32_t timer_Start = HAL_GetTick();
+
+    // Move to min
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
+
+    uint32_t timer_End = HAL_GetTick();
+
     parameters[PARAM_X1_P15V_I_MIN_MAX] = Max_PCurrent_Tune;
     parameters[PARAM_X1_N15V_I_MIN_MAX] = Max_NCurrent_Tune;
-    uint32_t time_taken = Timer_End - Timer_Start;
-    TuneCoil(POS_HOME_TUNE);
+
+    uint32_t time_taken = timer_End - timer_Start;
+
+    // Go home
+    TuneCoil(POS_HOME_TUNE, ADC_POS_HOME_TUNE);
+
     return time_taken;
 }
 
 float Get_Tune_Min_to_Max_Smoothness()
 {
     uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_TUNE();
-    TuneCoil(POS_MIN_TUNE);
+
+    // Ensure starting from min
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
     HAL_Delay(SETTLE_DELAY_MS);
-    int32_t max_error_in_adc;
-    TuneCoilSmoothness(POS_MAX_TUNE, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+
+    int32_t max_error_in_adc = 0;
+
+    TuneCoilSmoothness(
+        POS_MAX_TUNE,
+        ADC_POS_MAX_TUNE,
+        duration_ms,
+        MOVE_TOLERANCE_ADC,
+        &max_error_in_adc
+    );
+
     float total_distance = (float)(ADC_POS_MAX_TUNE - ADC_POS_MIN_TUNE);
     if (total_distance == 0) return 0.0f;
+
     float normalized_error = (float)max_error_in_adc / total_distance;
-    TuneCoil(POS_MIN_M1);
+
+    // Return to min
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
+
     return normalized_error;
 }
 
 float Get_Tune_Max_to_Min_Smoothness(void)
 {
     uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_TUNE();
-    moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
+
+    // Ensure starting from max
+    TuneCoil(POS_MAX_TUNE, ADC_POS_MAX_TUNE);
     HAL_Delay(SETTLE_DELAY_MS);
-    int32_t max_error_in_adc;
-    moveMotor1ToADCValue_And_Measure_Smoothness(POS_MIN_M1, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
+
+    int32_t max_error_in_adc = 0;
+
+    TuneCoilSmoothness(
+        POS_MIN_TUNE,
+        ADC_POS_MIN_TUNE,
+        duration_ms,
+        MOVE_TOLERANCE_ADC,
+        &max_error_in_adc
+    );
+
     float total_distance = (float)(ADC_POS_MAX_TUNE - ADC_POS_MIN_TUNE);
     if (total_distance == 0) return 0.0f;
+
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
+
+    // Return to min
+    TuneCoil(POS_MIN_TUNE, ADC_POS_MIN_TUNE);
+
     return normalized_error;
 }
 
 uint32_t ADC_MIN_TO_ADC_MAX_LOAD()
 {
-    moveMotor2ToADCValue(POS_MIN_LOAD);
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     uint32_t Motor2_Start = HAL_GetTick();
-    moveMotor2ToADCValue(POS_MAX_LOAD, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MAX_LOAD, ADC_POS_MAX_LOAD);
+
     uint32_t Motor2_End = HAL_GetTick();
 
-    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent_M2;
+    parameters[PARAM_X2_P15V_I_MIN_MAX] = Max_PCurrent_Coil;
 
     uint32_t time_taken = Motor2_End - Motor2_Start;
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     return time_taken;
 }
 
+
 uint32_t ADC_MAX_TO_ADC_MIN_M2()
 {
-    // float voltage_reading; // <<< REMOVED
+    LoadCoil(POS_MAX_LOAD, ADC_POS_MAX_LOAD);
 
-    moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
     uint32_t Motor2_Start = HAL_GetTick();
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     uint32_t Motor2_End = HAL_GetTick();
 
-    // <<< REMOVED: This entire block was using the deleted variable
-    // if (I2C_ReadVoltage(&hi2c1, Pot2, &voltage_reading) == HAL_OK)
-    // {
-    //     parameters[PARAM_X2_MIN_POS_V] = voltage_reading;
-    // }
-
-    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent_M2;
+    parameters[PARAM_X2_P15V_I_MAX_MIN] = Max_PCurrent_Coil;
 
     uint32_t time_taken = Motor2_End - Motor2_Start;
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     return time_taken;
 }
 
 float Get_M2_Min_to_Max_Smoothness()
 {
-    uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_M2();
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+    uint32_t duration_ms = ADC_MIN_TO_ADC_MAX_LOAD();
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
     HAL_Delay(SETTLE_DELAY_MS);
-    int32_t max_error_in_adc;
-    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MAX_M2, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX_M2 - ADC_POS_MIN_M2);
+
+    int32_t max_error_in_adc = 0;
+
+    LoadCoilSmoothness(
+        POS_MAX_LOAD,
+        ADC_POS_MAX_LOAD,
+        duration_ms,
+        MOVE_TOLERANCE_ADC,
+        &max_error_in_adc
+    );
+
+    float total_distance = (float)(ADC_POS_MAX_LOAD - ADC_POS_MIN_LOAD);
     if (total_distance == 0) return 0.0f;
+
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     return normalized_error;
 }
-
 float Get_M2_Max_to_Min_Smoothness(void)
 {
     uint32_t duration_ms = ADC_MAX_TO_ADC_MIN_M2();
-    moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MAX_LOAD, ADC_POS_MAX_LOAD);
     HAL_Delay(SETTLE_DELAY_MS);
-    int32_t max_error_in_adc;
-    moveMotor2ToADCValue_And_Measure_Smoothness(ADC_POS_MIN_M2, duration_ms, MOVE_TOLERANCE_ADC, &max_error_in_adc);
-    float total_distance = (float)(ADC_POS_MAX_M2 - ADC_POS_MIN_M2);
+
+    int32_t max_error_in_adc = 0;
+
+    LoadCoilSmoothness(
+        POS_MIN_LOAD,
+        ADC_POS_MIN_LOAD,
+        duration_ms,
+        MOVE_TOLERANCE_ADC,
+        &max_error_in_adc
+    );
+
+    float total_distance = (float)(ADC_POS_MAX_LOAD - ADC_POS_MIN_LOAD);
     if (total_distance == 0) return 0.0f;
+
     float normalized_error = (float)max_error_in_adc / total_distance;
-    moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+
+    LoadCoil(POS_MIN_LOAD, ADC_POS_MIN_LOAD);
+
     return normalized_error;
 }
