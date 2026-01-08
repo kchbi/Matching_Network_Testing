@@ -150,11 +150,11 @@ int main(void)
   I2C_Scan(&hi2c1);
   HAL_Delay(1000);
 
-  if (I2C_Init(&hi2c1,Motor1) != HAL_OK)
+  if (I2C_Init(&hi2c1,P15) != HAL_OK)
   {
-	  printf("Failed to Initalize the Motor1N \n");
+	  printf("Failed to Initialize the Motor1N \n");
   }
-  printf("Initlization Successfull of Motor1N \n");
+  printf("Initlization Successful of Motor1N \n");
   HAL_Delay(100);
 //  if (I2C_Init(&hi2c1,Motor1P) != HAL_OK)
 //  {
@@ -162,7 +162,7 @@ int main(void)
 //  }
 //  printf("Initlization Successfull of Motor1P \n");
 //  HAL_Delay(100);
-  if (I2C_Init(&hi2c1,Motor2) != HAL_OK)
+  if (I2C_Init(&hi2c1,N15) != HAL_OK)
   {
 	  printf("Failed to Initalize the Motor2N \n");
   }
@@ -197,170 +197,196 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-//	  for(int32_t i = 0 ; i < 200;i = i+5){
-//		  motor2_set_state(i);
-//	  }
-
 	  printf("Testing the USB Communication \r\n");
+
+
+
+//	  ModeControlADIOBoard(OFF);
+//	  printf("IN MANUAL MODE NOW\r\n");
+//
+	  set_relay_combination(0);
+	  printf("IN Combination 0 now \r\n");
+
+	  set_relay_combination(1);
+	  printf("In Combination 1 now \r\n");
+
+	  set_relay_combination(2);
+	  printf("IN Combination 2 now\r\n");
+
+	  set_relay_combination(3);
+	  printf("IN Combination 3 now\r\n");
+
+	  set_relay_combination(4);
+	  printf("IN Combination 4 now\r\n");
+
+	  set_relay_combination(5);
+	  printf("IN Combination 5 now\r\n");
+
+	  set_relay_combination(6);
+	  printf("IN Combination 6 now\r\n");
+
+	  set_relay_combination(7);
+	  printf("IN Combination 7 now\r\n");
+
 
 	    //--------------------------------------------------------------------
 	    // [SECTION 1] COMMAND HANDLING
 	    //--------------------------------------------------------------------
 	    // This section checks if a complete command has been received via UART.
 	    // If a command is ready, it is processed to change the system's state.
-	    //--------------------------------------------------------------------
-	    if (uart_command_is_ready()) {
-	        // Retrieve the received command string from the UART buffer.
-	        const char* command = (const char*)uart_get_command_buffer();
-
-	        // Print a debug message indicating a command has been received.
-	        printf("DBG_MAIN: Flag detected.\r\n");
-	        fflush(stdout); // Force the print buffer to send immediately.
-
-	        // --- Compare the received command against known commands ---
-
-	        if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
-	            printf("DBG_MAIN: Command for Start MATCHED!\r\n");
-	            fflush(stdout);
-	            // Set state to 0, which triggers the test sequence to run once.
-	            g_test_is_running = 0;
-	        }
-	        else if (strcmp(command, "CMD:STOP_TEST") == 0) {
-	            printf("DBG_MAIN: Command for Stop MATCHED!\r\n");
-	            fflush(stdout);
-	            // Set state to 1, which is the 'Idle' or 'Stopped' state.
-	            g_test_is_running = 1;
-	        }
-	        else if (strcmp(command, "CMD:CORNER1") == 0) {
-	            printf("DBG_MAIN: Command for Corner 1 (min, min) received.\r\n"); // Corrected log message
-	            fflush(stdout);
-	            // Set state to 2 to move motors to the MIN/MIN position.
-	            g_test_is_running = 2;
-	        }
-	        else if (strcmp(command, "CMD:CORNER2") == 0) {
-	            printf("DBG_MAIN: Command for Corner 2 (min, max) received.\r\n"); // Corrected log message
-	            fflush(stdout);
-	            // Set state to 3 to move motors to the MIN/MAX position.
-	            g_test_is_running = 3;
-	        }
-	        else if (strcmp(command, "CMD:CORNER3") == 0) {
-	            printf("DBG_MAIN: Command for Corner 3 (max, min) received.\r\n"); // Corrected log message
-	            fflush(stdout);
-	            // Set state to 4 to move motors to the MAX/MIN position.
-	            g_test_is_running = 4;
-	        }
-	        else if (strcmp(command, "CMD:CORNER4") == 0) {
-	            printf("DBG_MAIN: Command for Corner 4 (max, max) received.\r\n"); // Corrected log message
-	            fflush(stdout);
-	            // Set state to 5 to move motors to the MAX/MAX position.
-	            g_test_is_running = 5;
-	        }
-	        else {
-	            // If the command is not recognized, print an error message.
-	            printf("DBG_MAIN: Command MISMATCH! Received: [%s]\r\n", command);
-	            fflush(stdout);
-	        }
-
-	        // IMPORTANT: Reset the UART handler so it's ready to receive the next command.
-	        uart_reset_for_next_command();
-	    }
-      // ===================================================================
-      // 2. STATE-BASED ACTION SECTION
-      // ===================================================================
-      if (g_test_is_running == 0) {
-    	  memset(parameters, 0, sizeof(parameters));
-    	    // --- STATE: TEST ACTIVE ---
-    	    // This block will run the full test sequence once per "START" command.
-
-    	    // 1. Perform the real hardware tests and store the results.
-    	    // Note: We cast the uint32_t time results to float to match the array type.
-
-    	    // --- Time Tests ---
-
-    	  parameters[PARAM_X1_MAX_POS_V] = FindMaxPositionVoltageMotor1() ;
-    	  parameters[PARAM_X2_MIN_POS_V] = FindMinPositionVoltageMotor2() ;
-     	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
-    	  parameters[PARAM_X2_MAX_POS_V] = FindMaxPositionVoltageMotor2() ;
-    	  Update_Home_Positions();
-    	  parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
-    	  parameters[PARAM_X1_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
-    	  parameters[PARAM_X2_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
-    	  parameters[PARAM_X2_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
-    	    //----Current Test for Motors---
-    	    // When I call the Above function it would also populate all of the parameters related to Current of Motors
-    	    //---Current Test for Motors finished
-    	    //---Current Test for Potentiometers--
-
-
-
-
-
-    	    // --- Smoothness Tests ---
-    	    parameters[PARAM_X1_STEP_MIN_MAX] = Get_M1_Min_to_Max_Smoothness();
-    	    parameters[PARAM_X1_STEP_MAX_MIN] = Get_M1_Max_to_Min_Smoothness();
-    	    parameters[PARAM_X2_STEP_MIN_MAX] = Get_M2_Min_to_Max_Smoothness();
-    	    parameters[PARAM_X2_STEP_MAX_MIN] = Get_M2_Max_to_Min_Smoothness();
-
-
-    	    // 2. Fill in all other placeholder parameters with a constant value (0.0).
-    	    // This covers parameters for current and voltage which are not yet implemented.
-    	    // Loop from index 4 to 19.
-//    	    for (int i = 4; i < 20; i++) {
-//    	        parameters[i] = 0.0f;
+//	    //--------------------------------------------------------------------
+//	    if (uart_command_is_ready()) {
+//	        // Retrieve the received command string from the UART buffer.
+//	        const char* command = (const char*)uart_get_command_buffer();
+//
+//	        // Print a debug message indicating a command has been received.
+//	        printf("DBG_MAIN: Flag detected.\r\n");
+//	        fflush(stdout); // Force the print buffer to send immediately.
+//
+//	        // --- Compare the received command against known commands ---
+//
+//	        if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
+//	            printf("DBG_MAIN: Command for Start MATCHED!\r\n");
+//	            fflush(stdout);
+//	            // Set state to 0, which triggers the test sequence to run once.
+//	            g_test_is_running = 0;
+//	        }
+//	        else if (strcmp(command, "CMD:STOP_TEST") == 0) {
+//	            printf("DBG_MAIN: Command for Stop MATCHED!\r\n");
+//	            fflush(stdout);
+//	            // Set state to 1, which is the 'Idle' or 'Stopped' state.
+//	            g_test_is_running = 1;
+//	        }
+//	        else if (strcmp(command, "CMD:CORNER1") == 0) {
+//	            printf("DBG_MAIN: Command for Corner 1 (min, min) received.\r\n"); // Corrected log message
+//	            fflush(stdout);
+//	            // Set state to 2 to move motors to the MIN/MIN position.
+//	            g_test_is_running = 2;
+//	        }
+//	        else if (strcmp(command, "CMD:CORNER2") == 0) {
+//	            printf("DBG_MAIN: Command for Corner 2 (min, max) received.\r\n"); // Corrected log message
+//	            fflush(stdout);
+//	            // Set state to 3 to move motors to the MIN/MAX position.
+//	            g_test_is_running = 3;
+//	        }
+//	        else if (strcmp(command, "CMD:CORNER3") == 0) {
+//	            printf("DBG_MAIN: Command for Corner 3 (max, min) received.\r\n"); // Corrected log message
+//	            fflush(stdout);
+//	            // Set state to 4 to move motors to the MAX/MIN position.
+//	            g_test_is_running = 4;
+//	        }
+//	        else if (strcmp(command, "CMD:CORNER4") == 0) {
+//	            printf("DBG_MAIN: Command for Corner 4 (max, max) received.\r\n"); // Corrected log message
+//	            fflush(stdout);
+//	            // Set state to 5 to move motors to the MAX/MAX position.
+//	            g_test_is_running = 5;
+//	        }
+//	        else {
+//	            // If the command is not recognized, print an error message.
+//	            printf("DBG_MAIN: Command MISMATCH! Received: [%s]\r\n", command);
+//	            fflush(stdout);
+//	        }
+//
+//	        // IMPORTANT: Reset the UART handler so it's ready to receive the next command.
+//	        uart_reset_for_next_command();
+//	    }
+//      // ===================================================================
+//      // 2. STATE-BASED ACTION SECTION
+//      // ===================================================================
+//      if (g_test_is_running == 0) {
+//    	  memset(parameters, 0, sizeof(parameters));
+//    	    // --- STATE: TEST ACTIVE ---
+//    	    // This block will run the full test sequence once per "START" command.
+//
+//    	    // 1. Perform the real hardware tests and store the results.
+//    	    // Note: We cast the uint32_t time results to float to match the array type.
+//
+//    	    // --- Time Tests ---
+//
+//    	  parameters[PARAM_X1_MAX_POS_V] = FindMaxPositionVoltageMotor1() ;
+//    	  parameters[PARAM_X2_MIN_POS_V] = FindMinPositionVoltageMotor2() ;
+//     	  parameters[PARAM_X1_MIN_POS_V] = FindMinPositionVoltageMotor1() ;
+//    	  parameters[PARAM_X2_MAX_POS_V] = FindMaxPositionVoltageMotor2() ;
+//    	  Update_Home_Positions();
+//    	  parameters[PARAM_X1_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M1()/ 1000.0f;
+//    	  parameters[PARAM_X1_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M1()/ 1000.0f;
+//    	  parameters[PARAM_X2_TIME_MIN_MAX] = (float)ADC_MIN_TO_ADC_MAX_M2()/ 1000.0f;
+//    	  parameters[PARAM_X2_TIME_MAX_MIN] = (float)ADC_MAX_TO_ADC_MIN_M2()/ 1000.0f;
+//    	    //----Current Test for Motors---
+//    	    // When I call the Above function it would also populate all of the parameters related to Current of Motors
+//    	    //---Current Test for Motors finished
+//    	    //---Current Test for Potentiometers--
+//
+//
+//
+//
+//
+//    	    // --- Smoothness Tests ---
+//    	    parameters[PARAM_X1_STEP_MIN_MAX] = Get_M1_Min_to_Max_Smoothness();
+//    	    parameters[PARAM_X1_STEP_MAX_MIN] = Get_M1_Max_to_Min_Smoothness();
+//    	    parameters[PARAM_X2_STEP_MIN_MAX] = Get_M2_Min_to_Max_Smoothness();
+//    	    parameters[PARAM_X2_STEP_MAX_MIN] = Get_M2_Max_to_Min_Smoothness();
+//
+//
+//    	    // 2. Fill in all other placeholder parameters with a constant value (0.0).
+//    	    // This covers parameters for current and voltage which are not yet implemented.
+//    	    // Loop from index 4 to 19.
+////    	    for (int i = 4; i < 20; i++) {
+////    	        parameters[i] = 0.0f;
+////    	    }
+//
+//
+//    	    // 3. Send the complete data packet to the Python GUI.
+//    	    printf("DATA,");
+//    	    for (int i = 0; i < NUM_PARAMETERS; i++) {
+//    	        // We multiply by 1000.0 to send floats as integers with 3 decimal places. We will divide this by 1000 on the GUI Side to get the Real result
+//    	        printf("%ld", (int32_t)(parameters[i] * 1000.0f));
+//    	        if (i < NUM_PARAMETERS - 1) {
+//    	            printf(",");
+//    	        }
 //    	    }
-
-
-    	    // 3. Send the complete data packet to the Python GUI.
-    	    printf("DATA,");
-    	    for (int i = 0; i < NUM_PARAMETERS; i++) {
-    	        // We multiply by 1000.0 to send floats as integers with 3 decimal places. We will divide this by 1000 on the GUI Side to get the Real result
-    	        printf("%ld", (int32_t)(parameters[i] * 1000.0f));
-    	        if (i < NUM_PARAMETERS - 1) {
-    	            printf(",");
-    	        }
-    	    }
-    	    printf("\n");
-    	    fflush(stdout);
-
-    	    // 4. IMPORTANT: Stop the test from running again until the next command.
-    	    // If you remove this line, the test will run over and over.
-    	    g_test_is_running = 1;
-      } else if(g_test_is_running == 2){
-    	  printf("Going to the First Corner i.e. min-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
-    	  fflush(stdout);
-    	  g_test_is_running = 1;
-
-      } else if(g_test_is_running == 3){
-    	  printf("Going to the Second Corner i.e. min-max \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
-    	  fflush(stdout);
-    	  g_test_is_running = 1;
-
-      } else if(g_test_is_running == 4){
-    	  printf("Going to the Third Corner i.e. max-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
-    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
-    	  fflush(stdout);
-    	  g_test_is_running = 1;
-
-      } else if(g_test_is_running == 5){
-    	  printf("Going to the Fourth Corner i.e. min-min \r\n");
-    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
-    	  HAL_Delay(2000);
-    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
-    	  fflush(stdout);
-    	  g_test_is_running = 1;
-      }
-      else {
-          // --- STATE: IDLE ---
-          printf("In Idle State Right Now test is not running \r\n");
-          fflush(stdout); // It's good practice to flush after printing
-      }
-
-          HAL_Delay(500);
+//    	    printf("\n");
+//    	    fflush(stdout);
+//
+//    	    // 4. IMPORTANT: Stop the test from running again until the next command.
+//    	    // If you remove this line, the test will run over and over.
+//    	    g_test_is_running = 1;
+//      } else if(g_test_is_running == 2){
+//    	  printf("Going to the First Corner i.e. min-min \r\n");
+//    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
+//    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+//    	  fflush(stdout);
+//    	  g_test_is_running = 1;
+//
+//      } else if(g_test_is_running == 3){
+//    	  printf("Going to the Second Corner i.e. min-max \r\n");
+//    	  moveMotor1ToADCValue(ADC_POS_MIN_M1, MOVE_TOLERANCE_ADC);
+//    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
+//    	  fflush(stdout);
+//    	  g_test_is_running = 1;
+//
+//      } else if(g_test_is_running == 4){
+//    	  printf("Going to the Third Corner i.e. max-min \r\n");
+//    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
+//    	  moveMotor2ToADCValue(ADC_POS_MIN_M2, MOVE_TOLERANCE_ADC);
+//    	  fflush(stdout);
+//    	  g_test_is_running = 1;
+//
+//      } else if(g_test_is_running == 5){
+//    	  printf("Going to the Fourth Corner i.e. min-min \r\n");
+//    	  moveMotor1ToADCValue(ADC_POS_MAX_M1, MOVE_TOLERANCE_ADC);
+//    	  HAL_Delay(2000);
+//    	  moveMotor2ToADCValue(ADC_POS_MAX_M2, MOVE_TOLERANCE_ADC);
+//    	  fflush(stdout);
+//    	  g_test_is_running = 1;
+//      }
+//      else {
+//          // --- STATE: IDLE ---
+//          printf("In Idle State Right Now test is not running \r\n");
+//          fflush(stdout); // It's good practice to flush after printing
+//      }
+//
+//          HAL_Delay(500);
 
     }
   /* USER CODE END 3 */

@@ -14,14 +14,14 @@
 // ===================================================================
 // 1. PUBLIC CONSTANTS
 // ===================================================================
-extern uint16_t POS_MIN_TUNE;
-extern uint16_t POS_MAX_TUNE;
+extern float POS_MIN_TUNE;
+extern float POS_MAX_TUNE;
 
-extern uint16_t POS_MIN_LOAD;
-extern uint16_t POS_MAX_LOAD;
+extern float POS_MIN_LOAD;
+extern float POS_MAX_LOAD;
 
-extern uint16_t POS_HOME_TUNE;
-extern uint16_t POS_HOME_LOAD;
+extern float POS_HOME_TUNE;
+extern float POS_HOME_LOAD;
 
 #define MOVE_TOLERANCE_ADC  (20)       // <<< CHANGED: Tolerance for reaching a position
 // ===================================================================
@@ -31,7 +31,7 @@ extern uint16_t POS_HOME_LOAD;
  * @brief Global variable to hold the DMA results for the 2 ADC channels.
  *        Defined in main.c, declared here to be visible across files.
  */
-extern uint16_t volatile Pot1_2[2];
+extern uint16_t volatile ADC_IN[9];
 extern float Max_PCurrent_Tune, Max_NCurrent_Tune, Voltage_Tune ;
 extern float Max_PCurrent_Load, Max_NCurrent_Load, Voltage_Load ;
 
@@ -57,7 +57,7 @@ typedef enum{
 	ON,
 	OFF
 }DIO_t;
-
+void ModeControlADIOBoard(DIO_t STATE  );
 void relay_reset(void);
 void set_relay_combination(uint8_t combination);
 void relay_set_state(uint16_t GPIO_Pin, DIO_t state) ;
