@@ -14,10 +14,12 @@
 
 #define STEPPER_COUNT 3
 
+
 typedef enum {
 	IDLE,
 	MOVING
 }MotorState_t;
+
 
 typedef struct {
 	volatile int32_t toggles_remaining;
@@ -29,7 +31,8 @@ typedef struct {
 }Motor_t;
 
 
-extern Motor_t motors[STEPPER_COUNT];
+extern volatile Motor_t motors[STEPPER_COUNT];
+
 
 typedef enum {
 	DIR_CW ,

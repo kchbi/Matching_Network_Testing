@@ -59,12 +59,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
 #define TOGGLE_M2_Pin GPIO_PIN_1
 #define TOGGLE_M2_GPIO_Port GPIOA
-#define USART_TX_Pin GPIO_PIN_2
-#define USART_TX_GPIO_Port GPIOA
+#define TOGGLE_M3_Pin GPIO_PIN_2
+#define TOGGLE_M3_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
 #define TOGGLE_M1_Pin GPIO_PIN_5
@@ -81,8 +79,21 @@ void Error_Handler(void);
 #define STEP_M2_GPIO_Port GPIOB
 #define DIR_M2_Pin GPIO_PIN_1
 #define DIR_M2_GPIO_Port GPIOB
-#define TOGGLE_M3_Pin GPIO_PIN_10
-#define TOGGLE_M3_GPIO_Port GPIOB
+#define SENSOR_1_Pin GPIO_PIN_10
+#define SENSOR_1_GPIO_Port GPIOB
+#define SENSOR_1_EXTI_IRQn EXTI15_10_IRQn
+#define SENSOR_2_Pin GPIO_PIN_12
+#define SENSOR_2_GPIO_Port GPIOB
+#define SENSOR_2_EXTI_IRQn EXTI15_10_IRQn
+#define SENSOR_3_Pin GPIO_PIN_13
+#define SENSOR_3_GPIO_Port GPIOB
+#define SENSOR_3_EXTI_IRQn EXTI15_10_IRQn
+#define SENSOR_4_Pin GPIO_PIN_14
+#define SENSOR_4_GPIO_Port GPIOB
+#define SENSOR_4_EXTI_IRQn EXTI15_10_IRQn
+#define SENSOR_5_Pin GPIO_PIN_15
+#define SENSOR_5_GPIO_Port GPIOB
+#define SENSOR_5_EXTI_IRQn EXTI15_10_IRQn
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
