@@ -15,19 +15,31 @@
 #include <math.h>
 #include <stdint.h>
 
-
-extern uint8_t current_mask;
-
-uint8_t ideal_sensor_combos =
+/* ---------------- FSM Definition ---------------- */
+typedef enum
 {
-		0b0000,
-		0b0001,
-		0b0011,
-		0b0111,
-		0b0110
+    FSM_IDLE = 0,
 
+    FSM_MOVE_M1_TO_S1,
+    FSM_START_SCAN_M2_PHASE1,
+    FSM_SCAN_M2_PHASE1,
+    FSM_RETURN_M2_HOME_1,
 
-};
+    FSM_MOVE_M1_TO_S2,
+    FSM_START_SCAN_M2_PHASE2,
+    FSM_SCAN_M2_PHASE2,
+    FSM_RETURN_M2_HOME_2,
+
+    FSM_EVALUATE,
+    FSM_DONE
+
+} TestFSMState_t;
+
+void test_assembly_init(void);
+void test_assembly_run(void);
+
+extern bool test_pass;
+
 
 
 
