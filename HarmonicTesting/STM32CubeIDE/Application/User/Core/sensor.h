@@ -12,6 +12,7 @@
 
 #define SENSOR_COUNT  5
 extern volatile bool sensor_state[SENSOR_COUNT];
+extern bool sensor_event_pending;
 
 typedef enum {
 	SENSOR1,

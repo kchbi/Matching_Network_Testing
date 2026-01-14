@@ -13,8 +13,10 @@
 
 
 volatile bool sensor_state[SENSOR_COUNT] = {false} ;
+volatile bool sensor_event_pending = false ;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	sensor_event_pending = true;
 	if(GPIO_Pin == GPIO_PIN_10){
 
 		if ((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10 )) == GPIO_PIN_SET){

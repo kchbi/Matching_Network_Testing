@@ -90,11 +90,51 @@ void test_assembly_run(void)
             motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
             fsm_state = FSM_SCAN_M2_PHASE1;
         }
+
         break;
 
-    case FSM_SCAN_M2_PHASE1:
+    case FSM_SCAN_M2_PHASE11:
         if (sensor_event_pending)
         {
+        	motor_stop(MOTOR_EXTENSION);
+            sensor_event_pending = false;
+            mask = build_sensor_mask();
+
+            for (uint8_t i = 0; i < PHASE1_COUNT; i++)
+                if (mask == expected_phase1[i])
+                    observed_phase1[i] = true;
+        }
+
+        if (!motor_is_busy(MOTOR_EXTENSION))
+        {
+            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
+            fsm_state = FSM_SCAN_M2_PHASE12;
+        }
+        break;
+
+    case FSM_SCAN_M2_PHASE12:
+        if (sensor_event_pending)
+        {
+        	motor_stop(MOTOR_EXTENSION);
+            sensor_event_pending = false;
+            mask = build_sensor_mask();
+
+            for (uint8_t i = 0; i < PHASE1_COUNT; i++)
+                if (mask == expected_phase1[i])
+                    observed_phase1[i] = true;
+        }
+
+        if (!motor_is_busy(MOTOR_EXTENSION))
+        {
+            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
+            fsm_state = FSM_SCAN_M2_PHASE13;
+        }
+        break;
+
+    case FSM_SCAN_M2_PHASE13:
+        if (sensor_event_pending)
+        {
+        	motor_stop(MOTOR_EXTENSION);
             sensor_event_pending = false;
             mask = build_sensor_mask();
 
@@ -111,10 +151,12 @@ void test_assembly_run(void)
         break;
 
     case FSM_RETURN_M2_HOME_1:
-        if (!motor_is_busy(MOTOR_EXTENSION))
-        {
-            fsm_state = FSM_MOVE_M1_TO_S2;
-        }
+    	if(sensor_state[SENSOR3])
+    	{
+    		motor_stop(MOTOR_EXTENSION);
+    		fsm_state = FSM_MOVE_M1_TO_S2;
+
+    	}
         break;
 
     case FSM_MOVE_M1_TO_S2:
