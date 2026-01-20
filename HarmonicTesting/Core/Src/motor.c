@@ -63,7 +63,6 @@ void motor_start_move(uint8_t motor_id ,MotorDirection_t direction,uint32_t togg
 {
 	if (motors[motor_id].motorstate == MOVING)
 	{
-		printf("Motor has not completed the Previous Command\r\n");
 		return;
 	}
 

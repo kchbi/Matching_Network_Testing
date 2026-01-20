@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "test.h"
 
 /* ---------------- Motor IDs ---------------- */
 #define MOTOR_ROTATION   0
@@ -78,125 +79,191 @@ void test_assembly_run(void)
 
     switch (fsm_state)
     {
+    /* ================= PHASE 1 ================= */
+
     case FSM_MOVE_M1_TO_S1:
         motor_start_move(MOTOR_ROTATION, DIR_CW, 100000);
-        fsm_state = FSM_START_SCAN_M2_PHASE1;
+        fsm_state = FSM_WAIT_M1_AT_S1;
         break;
 
-    case FSM_START_SCAN_M2_PHASE1:
-        if (sensor_state[SENSOR1])
+    case FSM_WAIT_M1_AT_S1:
+        if (sensor_event == SENSOR1_RISE)
         {
+            sensor_event = SENSOR_EVENT_NONE;
             motor_stop(MOTOR_ROTATION);
-            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
-            fsm_state = FSM_SCAN_M2_PHASE1;
-        }
 
+            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
+            fsm_state = FSM_SCAN_M2_REGION_1_P1;
+        }
         break;
 
-    case FSM_SCAN_M2_PHASE11:
-        if (sensor_event_pending)
+    /* ---------- M2 REGION 1 (P1) ---------- */
+    case FSM_SCAN_M2_REGION_1_P1:
+        if (sensor_event != SENSOR_EVENT_NONE)
         {
-        	motor_stop(MOTOR_EXTENSION);
-            sensor_event_pending = false;
             mask = build_sensor_mask();
 
             for (uint8_t i = 0; i < PHASE1_COUNT; i++)
                 if (mask == expected_phase1[i])
                     observed_phase1[i] = true;
-        }
 
-        if (!motor_is_busy(MOTOR_EXTENSION))
-        {
-            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
-            fsm_state = FSM_SCAN_M2_PHASE12;
+            if (sensor_event == SENSOR3_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                fsm_state = FSM_SCAN_M2_REGION_2_P1;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
         }
         break;
 
-    case FSM_SCAN_M2_PHASE12:
-        if (sensor_event_pending)
+    /* ---------- M2 REGION 2 (P1) ---------- */
+    case FSM_SCAN_M2_REGION_2_P1:
+        if (sensor_event != SENSOR_EVENT_NONE)
         {
-        	motor_stop(MOTOR_EXTENSION);
-            sensor_event_pending = false;
             mask = build_sensor_mask();
 
             for (uint8_t i = 0; i < PHASE1_COUNT; i++)
                 if (mask == expected_phase1[i])
                     observed_phase1[i] = true;
-        }
 
-        if (!motor_is_busy(MOTOR_EXTENSION))
-        {
-            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
-            fsm_state = FSM_SCAN_M2_PHASE13;
+            if (sensor_event == SENSOR4_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                fsm_state = FSM_SCAN_M2_REGION_3_P1;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
         }
         break;
 
-    case FSM_SCAN_M2_PHASE13:
-        if (sensor_event_pending)
+    /* ---------- M2 REGION 3 (P1) ---------- */
+    case FSM_SCAN_M2_REGION_3_P1:
+        if (sensor_event != SENSOR_EVENT_NONE)
         {
-        	motor_stop(MOTOR_EXTENSION);
-            sensor_event_pending = false;
             mask = build_sensor_mask();
 
             for (uint8_t i = 0; i < PHASE1_COUNT; i++)
                 if (mask == expected_phase1[i])
                     observed_phase1[i] = true;
-        }
 
-        if (!motor_is_busy(MOTOR_EXTENSION))
-        {
-            motor_start_move(MOTOR_EXTENSION, DIR_CCW, 100000);
-            fsm_state = FSM_RETURN_M2_HOME_1;
+            if (sensor_event == SENSOR5_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                motor_stop(MOTOR_EXTENSION);
+                motor_start_move(MOTOR_EXTENSION, DIR_CCW, 100000);
+                fsm_state = FSM_RETURN_M2_HOME_1;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
         }
         break;
 
     case FSM_RETURN_M2_HOME_1:
-    	if(sensor_state[SENSOR3])
-    	{
-    		motor_stop(MOTOR_EXTENSION);
-    		fsm_state = FSM_MOVE_M1_TO_S2;
-
-    	}
-        break;
-
-    case FSM_MOVE_M1_TO_S2:
-        motor_start_move(MOTOR_ROTATION, DIR_CW, 100000);
-        fsm_state = FSM_START_SCAN_M2_PHASE2;
-        break;
-
-    case FSM_START_SCAN_M2_PHASE2:
-        if (sensor_state[SENSOR2])
+        if (sensor_event == SENSOR3_RISE)
         {
-            motor_stop(MOTOR_ROTATION);
-            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
-            fsm_state = FSM_SCAN_M2_PHASE2;
+            sensor_event = SENSOR_EVENT_NONE;
+            motor_stop(MOTOR_EXTENSION);
+            fsm_state = FSM_MOVE_M1_TO_S2;
         }
         break;
 
-    case FSM_SCAN_M2_PHASE2:
-        if (sensor_event_pending)
+    /* ================= PHASE 2 ================= */
+
+    case FSM_MOVE_M1_TO_S2:
+        motor_start_move(MOTOR_ROTATION, DIR_CW, 100000);
+        fsm_state = FSM_WAIT_M1_AT_S2;
+        break;
+
+    case FSM_WAIT_M1_AT_S2:
+        if (sensor_event == SENSOR2_RISE)
         {
-            sensor_event_pending = false;
+            sensor_event = SENSOR_EVENT_NONE;
+            motor_stop(MOTOR_ROTATION);
+
+            motor_start_move(MOTOR_EXTENSION, DIR_CW, 100000);
+            fsm_state = FSM_SCAN_M2_REGION_1_P2;
+        }
+        break;
+
+    /* ---------- M2 REGION 1 (P2) ---------- */
+    case FSM_SCAN_M2_REGION_1_P2:
+        if (sensor_event != SENSOR_EVENT_NONE)
+        {
             mask = build_sensor_mask();
 
             for (uint8_t i = 0; i < PHASE2_COUNT; i++)
                 if (mask == expected_phase2[i])
                     observed_phase2[i] = true;
-        }
 
-        if (!motor_is_busy(MOTOR_EXTENSION))
+            if (sensor_event == SENSOR3_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                fsm_state = FSM_SCAN_M2_REGION_2_P2;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
+        }
+        break;
+
+    /* ---------- M2 REGION 2 (P2) ---------- */
+    case FSM_SCAN_M2_REGION_2_P2:
+        if (sensor_event != SENSOR_EVENT_NONE)
         {
-            motor_start_move(MOTOR_EXTENSION, DIR_CCW, 100000);
-            fsm_state = FSM_RETURN_M2_HOME_2;
+            mask = build_sensor_mask();
+
+            for (uint8_t i = 0; i < PHASE2_COUNT; i++)
+                if (mask == expected_phase2[i])
+                    observed_phase2[i] = true;
+
+            if (sensor_event == SENSOR4_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                fsm_state = FSM_SCAN_M2_REGION_3_P2;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
+        }
+        break;
+
+    /* ---------- M2 REGION 3 (P2) ---------- */
+    case FSM_SCAN_M2_REGION_3_P2:
+        if (sensor_event != SENSOR_EVENT_NONE)
+        {
+            mask = build_sensor_mask();
+
+            for (uint8_t i = 0; i < PHASE2_COUNT; i++)
+                if (mask == expected_phase2[i])
+                    observed_phase2[i] = true;
+
+            if (sensor_event == SENSOR5_RISE)
+            {
+                sensor_event = SENSOR_EVENT_NONE;
+                motor_stop(MOTOR_EXTENSION);
+                motor_start_move(MOTOR_EXTENSION, DIR_CCW, 100000);
+                fsm_state = FSM_RETURN_M2_HOME_2;
+                break;
+            }
+
+            sensor_event = SENSOR_EVENT_NONE;
         }
         break;
 
     case FSM_RETURN_M2_HOME_2:
-        if (!motor_is_busy(MOTOR_EXTENSION))
+        if (sensor_event == SENSOR3_RISE)
         {
+            sensor_event = SENSOR_EVENT_NONE;
+            motor_stop(MOTOR_EXTENSION);
             fsm_state = FSM_EVALUATE;
         }
         break;
+
+    /* ================= EVALUATION ================= */
 
     case FSM_EVALUATE:
         for (uint8_t i = 0; i < PHASE1_COUNT; i++)

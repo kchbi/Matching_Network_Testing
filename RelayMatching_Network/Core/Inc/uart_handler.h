@@ -10,6 +10,8 @@
 
 
 #include "main.h" // Includes HAL drivers and peripheral handles
+#include "stm32f4xx_hal.h"
+
 
 /**
  * @brief Initializes the UART handler and starts listening for data.

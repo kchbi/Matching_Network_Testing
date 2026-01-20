@@ -443,7 +443,7 @@ void moveMotor1ToADCValue_And_Measure_Smoothness(uint16_t targetADC, uint32_t ex
     // Note: Passing uninitialized error/currentADC is safe ONLY because of the `if(reset)` check.
     uint16_t current_adc = 0; // Initialize to satisfy compiler warnings
     error_to_target = 0;      // Initialize to satisfy compiler warnings
-    PID_Control(Kp, Ki, Kd, e  rror_to_target, prev_tick, current_adc, 1);
+    PID_Control(Kp, Ki, Kd, error_to_target, prev_tick, current_adc, 1);
 
     while (1) {
         // --- SENSE ---

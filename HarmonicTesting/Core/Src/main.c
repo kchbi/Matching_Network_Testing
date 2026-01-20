@@ -19,10 +19,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../../STM32CubeIDE/Application/User/Core/motor.h"
-
+#include "motor.h"
+#include "test.h"
+#include "sensor.h"
 
 /* USER CODE END Includes */
 

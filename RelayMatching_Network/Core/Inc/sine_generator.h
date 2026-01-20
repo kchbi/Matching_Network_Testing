@@ -7,6 +7,10 @@
 
 #ifndef INC_SINE_GENERATOR_H_
 #define INC_SINE_GENERATOR_H_
+
+
+#include "stm32f4xx_hal.h"
+
 /**
  * @brief Starts the sine wave generation.
  * @note This function initializes the sine look-up table and starts the

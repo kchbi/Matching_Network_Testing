@@ -19,7 +19,6 @@
 
 
 // --- Public Function Prototypes ---
-extern uint32_t Timeout;
 extern uint16_t DevAddress;
 
 // Initializes the INA226 sensor with a given I2C handle and shunt resistor value.
