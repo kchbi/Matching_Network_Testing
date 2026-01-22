@@ -1,5 +1,0 @@
-../Core/Src/i2ccomm.c:33:19:I2C_Init	7
-../Core/Src/i2ccomm.c:96:19:I2C_ReadVoltage	2
-../Core/Src/i2ccomm.c:125:19:I2C_ReadCurrent	2
-../Core/Src/i2ccomm.c:152:19:I2C_ReadShuntVoltage	2
-../Core/Src/i2ccomm.c:166:6:I2C_Scan	3

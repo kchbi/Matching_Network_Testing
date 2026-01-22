@@ -57,8 +57,8 @@ void MotorControl_MoveAndMeasureSmoothness(
  * Get_MX_Min_to_Max_Smoothness
  * Get_MX_Max_to_Min_Smoothness
  */
-uint32_t MotorControl_MinToMax(Motor_ID_t motor);
-uint32_t MotorControl_MaxToMin(Motor_ID_t motor);
+uint32_t MotorControl_MinToMax(Motor_ID_t motor,float * P15 , float * N15);
+uint32_t MotorControl_MaxToMin(Motor_ID_t motor,float * P15 , float * N15);
 
 float MotorControl_GetSmoothness_MinToMax(Motor_ID_t motor);
 float MotorControl_GetSmoothness_MaxToMin(Motor_ID_t motor);

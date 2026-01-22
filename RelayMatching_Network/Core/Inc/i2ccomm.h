@@ -10,12 +10,10 @@
 
 #include "stm32f4xx_hal.h"
 
-#define Motor1      (0x45)
-//#define Motor1P      (0x40)
-//#define Motor2N      (0x44)
-#define Motor2     (0x41)
-#define Pot1         (0x4C)
-#define Pot2         (0x42)
+#define T15VP      (0x45)
+#define T15VN      (0x40)
+#define Pot1       (0x4C)
+#define Pot2       (0x42)
 
 
 // --- Public Function Prototypes ---

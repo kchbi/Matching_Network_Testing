@@ -38,17 +38,16 @@ void Test_Init(void)
     HAL_Delay(1000);
 
     /* INA226 initialisation */
-    if (I2C_Init(&hi2c1, Motor1) != HAL_OK)
-        printf("Failed to initialize Motor1 INA226\r\n");
+    if (I2C_Init(&hi2c1, T15VP) != HAL_OK)
+        printf("Failed to initialize +15V INA226\r\n");
     else
-        printf("Motor1 INA226 initialized\r\n");
+        printf(" +15V INA226 initialized\r\n");
 
     HAL_Delay(100);
-
-    if (I2C_Init(&hi2c1, Motor2) != HAL_OK)
-        printf("Failed to initialize Motor2 INA226\r\n");
+    if (I2C_Init(&hi2c1, T15VN) != HAL_OK)
+        printf("Failed to initialize -15V INA226\r\n");
     else
-        printf("Motor2 INA226 initialized\r\n");
+        printf(" -15V INA226 initialized\r\n");
 
     HAL_Delay(100);
 
@@ -73,11 +72,11 @@ void Test_Init(void)
 
 void Test_Run(void)
 {
-    memset(parameters, 0, sizeof(float) * 24);
+    memset(parameters, 0, sizeof(parameters));
 
     /* -------- Calibration -------- */
-    parameters[PARAM_X1_MAX_POS_V] = MotorControl_FindMax(MOTOR_1);
     parameters[PARAM_X1_MIN_POS_V] = MotorControl_FindMin(MOTOR_1);
+    parameters[PARAM_X1_MAX_POS_V] = MotorControl_FindMax(MOTOR_1);
 
     parameters[PARAM_X2_MIN_POS_V] = MotorControl_FindMin(MOTOR_2);
     parameters[PARAM_X2_MAX_POS_V] = MotorControl_FindMax(MOTOR_2);
@@ -86,16 +85,32 @@ void Test_Run(void)
 
     /* -------- Timing tests -------- */
     parameters[PARAM_X1_TIME_MIN_MAX] =
-        MotorControl_MinToMax(MOTOR_1) / 1000.0f;
+        MotorControl_MinToMax(
+            MOTOR_1,
+            &parameters[PARAM_X1_P15V_I_MIN_MAX],
+            &parameters[PARAM_X1_N15V_I_MIN_MAX]
+        ) / 1000.0f;
 
     parameters[PARAM_X1_TIME_MAX_MIN] =
-        MotorControl_MaxToMin(MOTOR_1) / 1000.0f;
+        MotorControl_MaxToMin(
+            MOTOR_1,
+            &parameters[PARAM_X1_P15V_I_MAX_MIN],
+            &parameters[PARAM_X1_N15V_I_MAX_MIN]
+        ) / 1000.0f;
 
     parameters[PARAM_X2_TIME_MIN_MAX] =
-        MotorControl_MinToMax(MOTOR_2) / 1000.0f;
+        MotorControl_MinToMax(
+            MOTOR_2,
+            &parameters[PARAM_X2_P15V_I_MIN_MAX],
+            &parameters[PARAM_X2_N15V_I_MIN_MAX]
+        ) / 1000.0f;
 
     parameters[PARAM_X2_TIME_MAX_MIN] =
-        MotorControl_MaxToMin(MOTOR_2) / 1000.0f;
+        MotorControl_MaxToMin(
+            MOTOR_2,
+            &parameters[PARAM_X2_P15V_I_MAX_MIN],
+            &parameters[PARAM_X2_N15V_I_MAX_MIN]
+        ) / 1000.0f;
 
     /* -------- Smoothness tests -------- */
     parameters[PARAM_X1_STEP_MIN_MAX] =
@@ -119,9 +134,9 @@ void Test_Run(void)
     printf("\n");
     fflush(stdout);
 
-    /* Stop repeat execution */
     g_test_is_running = 1;
 }
+
 
 /* ===== Corner positioning ===== */
 /* Maps from: g_test_is_running == 2..5 */

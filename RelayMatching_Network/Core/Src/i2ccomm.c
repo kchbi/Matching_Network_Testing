@@ -158,7 +158,7 @@ HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c,
     for (uint8_t attempt = 0; attempt < 2; attempt++)
     {
         status = HAL_I2C_Mem_Read(hi2c,
-                                  (DevAddress << 1),
+                                  (DevAddress << 1)+1,
                                   VoltageAddress,
                                   I2C_MEMADD_SIZE_8BIT,
                                   rx_buffer,
@@ -221,7 +221,7 @@ HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c,
     for (uint8_t attempt = 0; attempt < 2; attempt++)
     {
         status = HAL_I2C_Mem_Read(hi2c,
-                                  (DevAddress << 1),
+                                  (DevAddress << 1)+1,
                                   CurrentAddress,
                                   I2C_MEMADD_SIZE_8BIT,
                                   rx_buffer,
@@ -244,11 +244,6 @@ HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c,
     /* Combine bytes (MSB first) */
     raw_current = (int16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
 
-    /* INA226 sanity checks */
-    if (raw_current == 0x7FFF || raw_current == (int16_t)0x8000)
-    {
-        return HAL_ERROR;  // overflow or invalid data
-    }
     /* Convert to Amperes */
     *Current = (float)raw_current * Current_LSB;
 
