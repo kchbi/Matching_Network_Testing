@@ -1,6 +1,0 @@
-../Core/Src/uart_handler.c:24:6:uart_handler_init	1
-../Core/Src/uart_handler.c:30:9:uart_command_is_ready	1
-../Core/Src/uart_handler.c:34:19:uart_get_command_buffer	1
-../Core/Src/uart_handler.c:38:6:uart_reset_for_next_command	1
-../Core/Src/uart_handler.c:46:6:HAL_UART_RxCpltCallback	6
-../Core/Src/uart_handler.c:68:1:__io_putchar	1

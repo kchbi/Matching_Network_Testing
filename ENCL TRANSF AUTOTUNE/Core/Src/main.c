@@ -1,36 +1,33 @@
 /* USER CODE BEGIN Header */
 /**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2025 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "test.h"
-
 #include <stdio.h>
 #include <string.h>
 #include "uart_handler.h"
 #include <math.h>
 #include "i2ccomm.h"
 #include "sine_generator.h"
-#include "motor_control.h"
-#include "test.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,8 +61,13 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+// This is the one and only DEFINITION of the variable.
+// It tells the compiler to allocate memory for it.
 // Application state variable
 volatile uint8_t g_test_is_running = 1;
+
+// Application data
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -126,40 +128,17 @@ int main(void)
   MX_DAC_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-
-  uart_handler_init(&huart2);
-  MotorControl_Init();
-  Test_Init();
-
+  uart_handler_init(&huart2); // When regenerated this line of Code would always reset need to add
+  SineGenerator_Start(&hdac, &htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1) {
-
+  while (1)
+  {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		printf("UART Transmission is Successfull\r\n");
-////		MotorControl_MoveToADC(MOTOR_1,
-////		                            500,
-////		                            10);
-////		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
-////		MotorControl_MoveToADC(MOTOR_1,
-////		                            1500,
-////		                            10);
-////		Motor_Set(MOTOR_1, 110);
-//////		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
-////		float vsh;
-////		float cur;
-////		I2C_ReadShuntVoltage(&hi2c1, T15V, &vsh);
-////		I2C_ReadCurrent(&hi2c1, T15V, &cur);
-
-
-
-
-
-
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
@@ -170,36 +149,21 @@ int main(void)
 			printf("DBG_MAIN: Command received: [%s]\r\n", command);
 			fflush(stdout);
 
-			if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
+
+			if (strcmp(command, "CMD:STOP_TEST") == 0) {
 				g_test_is_running = 0;
 			}
-
-
-			else if (strcmp(command, "CMD:STOP_TEST") == 0) {
+			else if (strcmp(command, "CMD:CONFIG1") == 0)
+			{
 				g_test_is_running = 1;
-			} else if (strcmp(command, "CMD:CONFIG1") == 0) {
+			}
+			else if (strcmp(command, "CMD:CONFIG2") == 0)
+			{
 				g_test_is_running = 2;
-			} else if (strcmp(command, "CMD:CONFIG2") == 0) {
+			}
+			else if (strcmp(command, "CMD:CONFIG3") == 0)
+			{
 				g_test_is_running = 3;
-			} else if (strcmp(command, "CMD:CONFIG3") == 0) {
-				g_test_is_running = 4;
-			} else if (strcmp(command, "CMD:CONFIG4") == 0) {
-				g_test_is_running = 5;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK1") == 0)
-			{
-				g_test_is_running = 6;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK2") == 0)
-			{
-				g_test_is_running = 7;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK3&4") == 0)
-			{
-				g_test_is_running = 8;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK1") == 0){
-				g_test_is_running = 9;
 			}
 			else
 			{
@@ -216,27 +180,23 @@ int main(void)
 		switch (g_test_is_running) {
 		case 0:
 			/* Full automated test */
-			Test_Run();
+			TurnRelayOff();
+			printf("All relays turned off \r\n");
+			break;
+
+		case 1:
+			TurnK1K2On();
+			printf("Relay 1 and 2 is turned on \r\n");
 			break;
 
 		case 2:
-			/* Corner 1: MIN / MIN */
-			Test_GotoCorner(1);
+			TurnK3On();
+			printf("Relay 2 is turned on \r\n");
 			break;
 
 		case 3:
-			/* Corner 2: MIN / MAX */
-			Test_GotoCorner(2);
-			break;
-
-		case 4:
-			/* Corner 3: MAX / MIN */
-			Test_GotoCorner(3);
-			break;
-
-		case 5:
-			/* Corner 4: MAX / MAX */
-			Test_GotoCorner(4);
+			TurnK4On();
+			printf("Relay 2 is turned on \r\n");
 			break;
 
 		default:
@@ -245,7 +205,9 @@ int main(void)
 		}
 
 		HAL_Delay(100);
-	}
+
+
+  }
   /* USER CODE END 3 */
 }
 
@@ -701,37 +663,31 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
+
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
+                          |GPIO_PIN_11, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : PC0 PC1 PC2 PC3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PE7 PE8 PE9 PE10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10;
+  /*Configure GPIO pins : PE7 PE8 PE9 PE10
+                           PE11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
+                          |GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
@@ -746,10 +702,11 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	__disable_irq();
-	while (1) {
-	}
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT

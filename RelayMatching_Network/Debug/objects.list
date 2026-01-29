@@ -3,6 +3,7 @@
 "./Core/Src/motor_control.o"
 "./Core/Src/motor_driver.o"
 "./Core/Src/relay_control.o"
+"./Core/Src/relay_driver.o"
 "./Core/Src/sine_generator.o"
 "./Core/Src/stm32f4xx_hal_msp.o"
 "./Core/Src/stm32f4xx_it.o"

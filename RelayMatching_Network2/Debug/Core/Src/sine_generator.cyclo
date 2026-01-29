@@ -1,3 +1,0 @@
-../Core/Src/sine_generator.c:29:13:SineTable_Init	2
-../Core/Src/sine_generator.c:43:6:SineGenerator_Start	1
-../Core/Src/sine_generator.c:64:6:SineGenerator_Stop	1
