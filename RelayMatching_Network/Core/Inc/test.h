@@ -54,4 +54,6 @@ void Test_Run(void);
 void Test_GotoCorner(uint8_t corner_id);
 
 
+void Stop_test(void);
+
 #endif /* INC_TEST_H_ */

@@ -1,33 +1,35 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "test.h"
 
 #include <stdio.h>
 #include <string.h>
 #include "uart_handler.h"
 #include <math.h>
 #include "i2ccomm.h"
-
+#include "motor_control.h"
+#include "test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,17 +59,8 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-// This is the one and only DEFINITION of the variable.
-// It tells the compiler to allocate memory for it.
-uint16_t volatile Pot1_2[2];
-//float Max_PCurrent = 0 ;
 // Application state variable
 volatile uint8_t g_test_is_running = 1;
-
-// Application data
-#define NUM_PARAMETERS 2
-float parameters[NUM_PARAMETERS] = {0.0f};
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,117 +117,138 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  int cmd_int = 0 ;
 
-  uart_handler_init(&huart2); // When regenerated this line of Code would always reset need to add
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
-  I2C_Scan(&hi2c1);
-  HAL_Delay(1000);
-  if (I2C_Init(&hi2c1,Pot1) != HAL_OK)
-  {
-	  printf("Failed to Initalize the Pot1 \n");
-  }
-  printf("Initlization Successfull of Pot1 \n");
-  HAL_Delay(100);
-  if (I2C_Init(&hi2c1,Pot2) != HAL_OK)
-  {
-	  printf("Failed to Initalize the Pot2 \n");
-  }
-  printf("Initlization Successfull of Pot2 \n");
-  HAL_Delay(100);
+  uart_handler_init(&huart2);
+  MotorControl_Init();
+  Test_Init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		/* ================================================================
+		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
+		 * ================================================================ */
 
+		if (uart_command_is_ready()) {
 
-	  printf("Testing the USB Communication \r\n");
-	  //	  motor1_set_state(MOTOR_STOP,200);
-	  ////	  HAL_Delay(2000);
-	  //	  motor2_set_state(MOTOR_STOP,200);
-	  ////	  HAL_Delay(2000);
-	  	    //--------------------------------------------------------------------
-	  	    // [SECTION 1] COMMAND HANDLING
-	  	    //--------------------------------------------------------------------
-	  	    // This section checks if a complete command has been received via UART.
-	  	    // If a command is ready, it is processed to change the system's state.
-	  	    //--------------------------------------------------------------------
-	  	    if (uart_command_is_ready()) {
-	  	        // Retrieve the received command string from the UART buffer.
-	  	        const char* command = (const char*)uart_get_command_buffer();
+			const char *command = (const char*) uart_get_command_buffer();
 
-	  	        // Print a debug message indicating a command has been received.
-	  	        printf("DBG_MAIN: Flag detected.\r\n");
-	  	        fflush(stdout); // Force the print buffer to send immediately.
+			printf("DBG_MAIN: Command received: [%s]\r\n", command);
+			fflush(stdout);
 
-	  	        // --- Compare the received command against known commands ---
+			if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
+				g_test_is_running = 0;
+			}
+			else if (strcmp(command, "CMD:STOP_TEST") == 0) {
+				g_test_is_running = 1;
+			} else if (strcmp(command, "CMD:CONFIG1") == 0) {
+				g_test_is_running = 2;
+			} else if (strcmp(command, "CMD:CONFIG2") == 0) {
+				g_test_is_running = 3;
+			} else if (strcmp(command, "CMD:CONFIG3") == 0) {
+				g_test_is_running = 4;
+			} else if (strcmp(command, "CMD:CONFIG4") == 0) {
+				g_test_is_running = 5;
+			}
+			else if (sscanf(command, "CMD:SET_M1 %d", &cmd_int) == 1)
+			{
+				g_test_is_running = 6;
+			}
+			else if (sscanf(command, "CMD:SET_M2 %d", &cmd_int) == 1)
+			{
+				g_test_is_running = 7;
+			}
+			else
+			{
+				printf("DBG_MAIN: Unknown command\r\n");
+				fflush(stdout);
+			}
 
-	  	        if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
-	  	            printf("DBG_MAIN: Command for Start MATCHED!\r\n");
-	  	            fflush(stdout);
-	  	            // Set state to 0, which triggers the test sequence to run once.
-	  	            g_test_is_running = 0;
-	  	        }
-	  	        else if (strcmp(command, "CMD:STOP_TEST") == 0) {
-	  	            printf("DBG_MAIN: Command for Stop MATCHED!\r\n");
-	  	            fflush(stdout);
-	  	            // Set state to 1, which is the 'Idle' or 'Stopped' state.
-	  	            g_test_is_running = 1;
-	  	        }
-	  	        else {
-	  	            // If the command is not recognized, print an error message.
-	  	            printf("DBG_MAIN: Command MISMATCH! Received: [%s]\r\n", command);
-	  	            fflush(stdout);
-	  	        }
+			uart_reset_for_next_command();
+		}
 
-	  	        // IMPORTANT: Reset the UART handler so it's ready to receive the next command.
-	  	        uart_reset_for_next_command();
-	  	    }
-	        // ===================================================================
-	        // 2. STATE-BASED ACTION SECTION
-	        // ===================================================================
-	        if (g_test_is_running == 0) {
-	      	  memset(parameters, 0, sizeof(parameters));
-	      	    // --- STATE: TEST ACTIVE ---
-	      	    // This block will run the full test sequence once per "START" command.
+		/* ================================================================
+		 * SECTION 2: STATE-BASED ACTION DISPATCH
+		 * ================================================================ */
+		switch (g_test_is_running) {
+		case 0:
+			/* Full automated test */
 
-	      	    // 1. Perform the real hardware tests and store the results.
-	      	    // Note: We cast the uint32_t time results to float to match the array type.
+			break;
+		case 1:
+			Stop_test();
+			g_test_is_running = STATE_IDLE;
+			break;
 
-	      	    // --- Time Tests ---
-	      	    // 3. Send the complete data packet to the Python GUI.
-	      	  parameters[0] = Pot1_2[0];
-	      	  parameters[1] = Pot1_2[1];
+		case 2:
+			/* Corner 1: MIN / MIN */
+			Test_GotoCorner(2);
+			HAL_Delay(10);
+			break;
 
+		case 3:
+			/* Corner 2: MIN / MAX */
+			Test_GotoCorner(3);
+			HAL_Delay(10);
+			break;
 
+		case 4:
+			/* Corner 3: MAX / MIN */
+			Test_GotoCorner(4);
+			HAL_Delay(10);
+			break;
 
+		case 5:
+			/* Corner 4: MAX / MAX */
+			Test_GotoCorner(5);
+			HAL_Delay(10);
+			break;
 
-	      	    printf("DATA,");
-	      	    for (int i = 0; i < NUM_PARAMETERS; i++) {
-	      	        // We multiply by 1000.0 to send floats as integers with 3 decimal places. We will divide this by 1000 on the GUI Side to get the Real result
-	      	        printf("%ld", (int32_t)(parameters[i] * 1000.0f));
-	      	        if (i < NUM_PARAMETERS - 1) {
-	      	            printf(",");
-	      	        }
-	      	    }
-	      	    printf("\n");
-	      	    fflush(stdout);
+		case 6:   // CMD:SET_M1 <0..100>
+		{
+		    if (cmd_int < 0)   cmd_int = 0;
+		    if (cmd_int > 100) cmd_int = 100;
+		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_1);
 
-	      	    // 4. IMPORTANT: Stop the test from running again until the next command.
-	      	    // If you remove this line, the test will run over and over.
-	        }
-	        else {
-	            // --- STATE: IDLE ---
-	            printf("In Idle State Right Now test is not running \r\n");
-	            fflush(stdout); // It's good practice to flush after printing
-	        }
+		    uint16_t targetADC =
+		        cal->adc_min +
+		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
 
-	            HAL_Delay(500);
-  }
+		    MotorControl_MoveToADC(MOTOR_1, targetADC, 10);
+
+		    g_test_is_running = 1;   // return to idle
+		    break;
+		}
+
+		case 7:   // CMD:SET_M2 <0..100>
+		{
+		    if (cmd_int < 0)   cmd_int = 0;
+		    if (cmd_int > 100) cmd_int = 100;
+		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_2);
+
+		    uint16_t targetADC =
+		        cal->adc_min +
+		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
+
+		    MotorControl_MoveToADC(MOTOR_2, targetADC, 10);
+
+		    g_test_is_running = 1;
+		    break;
+		}
+
+		default:
+			/* Idle */
+			break;
+		}
+
+	}
   /* USER CODE END 3 */
 }
 
@@ -608,7 +622,6 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
-
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -632,7 +645,6 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
@@ -647,11 +659,10 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT

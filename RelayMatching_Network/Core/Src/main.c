@@ -31,6 +31,7 @@
 #include "sine_generator.h"
 #include "motor_control.h"
 #include "test.h"
+#include "relay_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -126,6 +127,9 @@ int main(void)
   MX_DAC_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+  int cmd_int = 0 ;
+  float voltage2=0;
+  float voltage1=0;
 
   uart_handler_init(&huart2);
   MotorControl_Init();
@@ -140,14 +144,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		printf("UART Transmission is Successfull\r\n");
-////		MotorControl_MoveToADC(MOTOR_1,
-////		                            500,
-////		                            10);
-////		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
-////		MotorControl_MoveToADC(MOTOR_1,
-////		                            1500,
-////		                            10);
+		printf("UART Transmission is Successfull\r\n");
+//        I2C_ReadVoltage(&hi2c1,Pot1,&voltage2);
+//        HAL_Delay(100);
+//        I2C_ReadVoltage(&hi2c1,Pot2,&voltage1);
+
+		Motor_Set(MOTOR_2,5.0f);
+		Motor_Set(MOTOR_2,-5.0f);
+
+
+//		MotorControl_MoveToADC(MOTOR_1,
+//		                            160,
+//		                            10);
+//		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
+//		MotorControl_MoveToADC(MOTOR_1,
+//		                            3500,
+//		                            10);
 ////		Motor_Set(MOTOR_1, 110);
 //////		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
 ////		float vsh;
@@ -157,14 +169,12 @@ int main(void)
 
 
 
-
-
-
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
 
 		if (uart_command_is_ready()) {
+
 			const char *command = (const char*) uart_get_command_buffer();
 
 			printf("DBG_MAIN: Command received: [%s]\r\n", command);
@@ -173,8 +183,6 @@ int main(void)
 			if (strcmp(command, "CMD:PERFORM_TEST") == 0) {
 				g_test_is_running = 0;
 			}
-
-
 			else if (strcmp(command, "CMD:STOP_TEST") == 0) {
 				g_test_is_running = 1;
 			} else if (strcmp(command, "CMD:CONFIG1") == 0) {
@@ -186,20 +194,13 @@ int main(void)
 			} else if (strcmp(command, "CMD:CONFIG4") == 0) {
 				g_test_is_running = 5;
 			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK1") == 0)
+			else if (sscanf(command, "CMD:SET_M1 %d", &cmd_int) == 1)
 			{
 				g_test_is_running = 6;
 			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK2") == 0)
+			else if (sscanf(command, "CMD:SET_M2 %d", &cmd_int) == 1)
 			{
 				g_test_is_running = 7;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK3&4") == 0)
-			{
-				g_test_is_running = 8;
-			}
-			else if (strcmp(command, "CMD:PERFORM_TESTK1") == 0){
-				g_test_is_running = 9;
 			}
 			else
 			{
@@ -217,6 +218,9 @@ int main(void)
 		case 0:
 			/* Full automated test */
 			Test_Run();
+			break;
+		case 1:
+			Stop_test();
 			break;
 
 		case 2:
@@ -238,6 +242,37 @@ int main(void)
 			/* Corner 4: MAX / MAX */
 			Test_GotoCorner(4);
 			break;
+
+		case 6:   // CMD:SET_M1 <0..100>
+		{
+		    if (cmd_int < 0)   cmd_int = 0;
+		    if (cmd_int > 100) cmd_int = 100;
+		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_1);
+
+		    uint16_t targetADC =
+		        cal->adc_min +
+		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
+
+
+		    MotorControl_MoveToADC(MOTOR_1, targetADC, 10);
+		    g_test_is_running = 1;   // return to idle
+		    break;
+		}
+
+		case 7:   // CMD:SET_M2 <0..100>
+		{
+		    if (cmd_int < 0)   cmd_int = 0;
+		    if (cmd_int > 100) cmd_int = 100;
+		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_2);
+		    uint16_t targetADC =
+		        cal->adc_min +
+		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
+
+
+		    MotorControl_MoveToADC(MOTOR_2, targetADC, 10);
+		    g_test_is_running = 1;
+		    break;
+		}
 
 		default:
 			/* Idle */

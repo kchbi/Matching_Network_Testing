@@ -12,8 +12,8 @@
 
 #define RELAY1_PIN   GPIO_PIN_0
 #define RELAY2_PIN   GPIO_PIN_1
-#define RELAY3_PIN   GPIO_PIN_2
-#define RELAY4_PIN   GPIO_PIN_3
+#define RELAY3_PIN   GPIO_PIN_3
+#define RELAY4_PIN   GPIO_PIN_4
 
 #define RELAY_GPIO_PORT GPIOC
 

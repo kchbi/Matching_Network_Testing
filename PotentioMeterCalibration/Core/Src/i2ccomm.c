@@ -20,158 +20,285 @@
 //================================================================================
 
 
+static const uint32_t Timeout = 100;
+
+static const float Maximum_Expected_Current = 0.5f;
+static const float Shunt_Resistor_Value     = 0.1f;
+static const float Current_LSB              = Maximum_Expected_Current / 32768.0f;
+static const float calculated_cal_float     = 0.00512f / (Current_LSB * Shunt_Resistor_Value);
+static const uint16_t calibration_value     = (uint16_t)(calculated_cal_float + 0.5f);
 
 
-
-uint32_t Timeout = 100 ;
 
 #define ConfigAddress 0x00
 #define CalibrationAddress 0x05
 #define VoltageAddress 0x02
 #define CurrentAddress 0x04
 #define ConfigSettings 0x4527
-const float Maximum_Expected_Current = 0.5f;
-const float Shunt_Resistor_Value = 0.1f ;
-const float Current_LSB = Maximum_Expected_Current/32768.0f;
-const float calculated_cal_float = 0.00512f / (Current_LSB * Shunt_Resistor_Value);
-const uint16_t calibration_value = (uint16_t)(calculated_cal_float + 0.5f);
+#define SHUNT_VOLTAGE_ADDRESS  0x01
 
-
-
-
-
+/**
+ * @brief  Initialize INA226 device with configuration and calibration
+ * @note   Performs bus recovery, retry logic, reset, config write,
+ *         calibration write, and configuration verification.
+ *
+ * @param  hi2c        Pointer to I2C handle
+ * @param  DevAddress  7-bit I2C device address
+ *
+ * @retval HAL_OK      Initialization successful
+ * @retval HAL_ERROR   Device not responding or verification failed
+ */
 
 HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
 {
-	if(HAL_I2C_IsDeviceReady(hi2c, ((DevAddress) << 1), 10,  Timeout) != HAL_OK)
-	{
-		printf("The I2C Device is not Ready \n");
-		return HAL_ERROR;
-	}
-	printf("The Device is Ready \n");
-	HAL_Delay(100);
-	// --- THIS IS THE RESET CODE ---
-	uint16_t reset_cmd = 0x8000;
-	uint8_t tx_buffer[2];
+    HAL_StatusTypeDef status;
+    uint8_t tx_buffer[2];
+    uint8_t rx_buffer[2];
 
-	// Prepare the 2-byte command
-	tx_buffer[0] = (reset_cmd >> 8);      // MSB = 0x80
-	tx_buffer[1] = (reset_cmd & 0xFF);      // LSB = 0x00
-
-	// Write the reset command to the Configuration Register (0x00)
-	if(HAL_I2C_Mem_Write(hi2c, (DevAddress << 1), ConfigAddress, I2C_MEMADD_SIZE_8BIT, tx_buffer, 2, 100) != HAL_OK)
-	{
-	    printf("ERROR: Failed to send RESET command.\n");
-	    return HAL_ERROR;
-	}
-
-	// Give the chip a moment to complete its internal reset
-	HAL_Delay(5);
-	printf("SUCCESS: Reset command sent. Continuing with configuration...\n");
-	tx_buffer[0] = ConfigSettings >> 8 ;
-	tx_buffer[1] = (ConfigSettings & 0xFF);
-	if(HAL_I2C_Mem_Write(hi2c, ((DevAddress) << 1), ConfigAddress , I2C_MEMADD_SIZE_8BIT, tx_buffer, 2, Timeout) != HAL_OK)
-	{
-		printf("Failed to do the Configuration \n");
-		return HAL_ERROR;
-	}
-	printf("Configuration was done Successfully \n");
-	HAL_Delay(100);
-
-	tx_buffer[0] = calibration_value >> 8 ;
-	tx_buffer[1] = (calibration_value & 0xFF);
-
-	if(HAL_I2C_Mem_Write(hi2c, ((DevAddress) << 1), CalibrationAddress , I2C_MEMADD_SIZE_8BIT, tx_buffer, 2, Timeout) != HAL_OK)
-	{
-		printf("Failed to do the Calibration \n");
-		return HAL_ERROR;
-	}
-	printf("Calibration was done Successfully \n");
-	HAL_Delay(100);
-    // Read back configuration to verify
-    uint8_t config_read[2];
-    if(HAL_I2C_Mem_Read(hi2c, (DevAddress << 1), ConfigAddress,
-                       I2C_MEMADD_SIZE_8BIT, config_read, 2, Timeout) == HAL_OK)
+    /* 1. Ensure bus is free */
+    if (HAL_I2C_GetState(hi2c) != HAL_I2C_STATE_READY)
     {
-        uint16_t actual_config = (config_read[0] << 8) | config_read[1];
-        printf("Actual Config: 0x%04X\n", actual_config);
+        I2C_ClearBus(hi2c);
+    }
 
-        if(actual_config != ConfigSettings) {
-            printf("ERROR: Config write failed!\n");
+    /* 2. Check device readiness (retry) */
+    for (uint8_t attempt = 0; attempt < 3; attempt++)
+    {
+        status = HAL_I2C_IsDeviceReady(hi2c,
+                                       (DevAddress << 1),
+                                       3,
+                                       Timeout);
+        if (status == HAL_OK)
+            break;
+
+        if (attempt == 1)
+        {
+            I2C_ClearBus(hi2c);
         }
     }
-	return HAL_OK;
 
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    /* 3. Send reset command */
+    tx_buffer[0] = 0x80;
+    tx_buffer[1] = 0x00;
+
+    status = HAL_I2C_Mem_Write(hi2c,
+                               (DevAddress << 1),
+                               ConfigAddress,
+                               I2C_MEMADD_SIZE_8BIT,
+                               tx_buffer,
+                               2,
+                               Timeout);
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    /* Datasheet: reset completes in ~2 ms */
+    HAL_Delay(3);
+
+    /* 4. Write configuration register */
+    tx_buffer[0] = (uint8_t)(ConfigSettings >> 8);
+    tx_buffer[1] = (uint8_t)(ConfigSettings & 0xFF);
+
+    status = HAL_I2C_Mem_Write(hi2c,
+                               (DevAddress << 1),
+                               ConfigAddress,
+                               I2C_MEMADD_SIZE_8BIT,
+                               tx_buffer,
+                               2,
+                               Timeout);
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    /* 5. Write calibration register */
+    tx_buffer[0] = (uint8_t)(calibration_value >> 8);
+    tx_buffer[1] = (uint8_t)(calibration_value & 0xFF);
+
+    status = HAL_I2C_Mem_Write(hi2c,
+                               (DevAddress << 1),
+                               CalibrationAddress,
+                               I2C_MEMADD_SIZE_8BIT,
+                               tx_buffer,
+                               2,
+                               Timeout);
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    /* 6. Verify configuration */
+    status = HAL_I2C_Mem_Read(hi2c,
+                              (DevAddress << 1),
+                              ConfigAddress,
+                              I2C_MEMADD_SIZE_8BIT,
+                              rx_buffer,
+                              2,
+                              Timeout);
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    uint16_t actual_config = (rx_buffer[0] << 8) | rx_buffer[1];
+    if (actual_config != ConfigSettings)
+        return HAL_ERROR;
+
+    return HAL_OK;
 }
 
-HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Voltage )
+HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c,
+                                  uint16_t DevAddress,
+                                  float *Voltage)
 {
-	uint8_t rx_buffer[2];
-	if(HAL_I2C_Mem_Read(hi2c,((DevAddress<<1)), VoltageAddress ,  I2C_MEMADD_SIZE_8BIT, rx_buffer, 2, Timeout) != HAL_OK)
-	{
-		printf("Could not read the Voltage from Voltage Register \n");
-		return HAL_ERROR;
+    if (Voltage == NULL)
+        return HAL_ERROR;
 
-	}
+    uint8_t rx_buffer[2];
+    HAL_StatusTypeDef status;
+    uint16_t raw_voltage;
 
-    // 2. Combine the two 8-bit bytes into one 16-bit unsigned integer (MSB first)
-    uint16_t raw_voltage = (rx_buffer[0] << 8) | rx_buffer[1];
-    printf("Raw Bus Voltage: 0x%04X\n", raw_voltage);
+    /* Retry once to handle INA226 NACK / clock stretching */
+    for (uint8_t attempt = 0; attempt < 2; attempt++)
+    {
+        status = HAL_I2C_Mem_Read(hi2c,
+                                  (DevAddress << 1)+1,
+                                  VoltageAddress,
+                                  I2C_MEMADD_SIZE_8BIT,
+                                  rx_buffer,
+                                  2,
+                                  Timeout);
 
-    // 3. Convert the raw value to Volts by multiplying by the LSB (1.25mV)
-    //    The datasheet specifies a fixed LSB for voltage of 1.25 mV/bit.
-    //    *voltage_V is used to "return" the float value via a pointer.
-    *Voltage = raw_voltage * 0.00125f;
+        if (status == HAL_OK)
+            break;
 
-    // Optional: Print the result for debugging
-    // printf("Raw Voltage: 0x%04X, Calculated Voltage: %.3f V\n", raw_voltage, *voltage_V);
-    printf("Read the Voltage from the Voltage Register Successfully \n");
+        /* Attempt I2C recovery on first failure */
+        if (attempt == 0)
+        {
+            I2C_ClearBus(hi2c);
+        }
+    }
 
-	return HAL_OK;
+    if (status != HAL_OK)
+        return HAL_ERROR;
 
+    /* Combine MSB and LSB */
+    raw_voltage = (uint16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
 
+    /* INA226 sanity check:
+       - 0x0000 often appears during startup or conversion gaps */
+    if (raw_voltage == 0x0000)
+    {
+        return HAL_ERROR;
+    }
+
+    /* Convert to Volts (1.25 mV per bit) */
+    *Voltage = (float)raw_voltage * 0.00125f;
+
+    return HAL_OK;
 }
 
-HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Current )
+/**
+ * @brief  Read current from INA226
+ * @note   Includes retry logic, bus recovery, and overflow detection
+ *
+ * @param  hi2c        Pointer to I2C handle
+ * @param  DevAddress  7-bit I2C address
+ * @param  Current     Output current in Amperes
+ *
+ * @retval HAL_OK
+ * @retval HAL_ERROR
+ */
+
+HAL_StatusTypeDef I2C_ReadCurrent(I2C_HandleTypeDef *hi2c,
+                                  uint16_t DevAddress,
+                                  float *Current)
 {
-	uint8_t rx_buffer[2];
-	if(HAL_I2C_Mem_Read(hi2c,((DevAddress<<1)), CurrentAddress ,  I2C_MEMADD_SIZE_8BIT, rx_buffer, 2, Timeout) != HAL_OK)
-	{
-		printf("Could not read the Current from Current Register \n");
-		return HAL_ERROR;
+    if (Current == NULL)
+        return HAL_ERROR;
 
-	}
+    uint8_t rx_buffer[2];
+    HAL_StatusTypeDef status;
+    int16_t raw_current;
 
+    /* Try read twice (handles transient INA226 NACKs) */
+    for (uint8_t attempt = 0; attempt < 2; attempt++)
+    {
+        status = HAL_I2C_Mem_Read(hi2c,
+                                  (DevAddress << 1)+1,
+                                  CurrentAddress,
+                                  I2C_MEMADD_SIZE_8BIT,
+                                  rx_buffer,
+                                  2,
+                                  Timeout);
 
-    // 2. Combine the two 8-bit bytes into one 16-bit unsigned integer (MSB first)
-    int16_t raw_current = (int16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
+        if (status == HAL_OK)
+            break;
 
-    // 3. Convert the raw value to Ampere by multiplying by the LSB (1 mA)
-    //    The datasheet specifies a fixed LSB for Current of 1 mA/bit.
-    //    *Current is used to "return" the float value via a pointer.
-    *Current = raw_current * Current_LSB;
-    printf("Read the current from Current Register Successfully \n");
+        /* Attempt bus recovery once */
+        if (attempt == 0)
+        {
+            I2C_ClearBus(hi2c);
+        }
+    }
 
-    // Optional: Print the result for debugging
-    // printf("Raw Current: 0x%04X, Calculated Current: %.3f V\n", raw_current, *Current);
+    if (status != HAL_OK)
+        return HAL_ERROR;
 
-	return HAL_OK;
+    /* Combine bytes (MSB first) */
+    raw_current = (int16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
 
+    /* Convert to Amperes */
+    *Current = (float)raw_current * Current_LSB;
 
+    return HAL_OK;
 }
-HAL_StatusTypeDef I2C_ReadShuntVoltage(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Voltage)
+
+HAL_StatusTypeDef I2C_ReadShuntVoltage(I2C_HandleTypeDef *hi2c,
+                                      uint16_t DevAddress,
+                                      float *Voltage)
 {
-	uint8_t rx_buffer[2];
-	if(HAL_I2C_Mem_Read(hi2c, (DevAddress << 1), 0x01, I2C_MEMADD_SIZE_8BIT, rx_buffer, 2, Timeout) != HAL_OK)
-	{
-		printf("Could not read Shunt Voltage\n");
-		return HAL_ERROR;
-	}
-	int16_t raw = (int16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
-	printf("Raw Shunt Voltage: 0x%04X\n", raw);
-	*Voltage = raw * 0.0000025f;  // 2.5 µV per bit
-	return HAL_OK;
+    if (Voltage == NULL)
+        return HAL_ERROR;
+
+    uint8_t rx_buffer[2];
+    HAL_StatusTypeDef status;
+    int16_t raw;
+
+    /* Try read twice (handles transient NACK / clock stretch) */
+    for (uint8_t attempt = 0; attempt < 2; attempt++)
+    {
+        status = HAL_I2C_Mem_Read(hi2c,
+                                  (DevAddress << 1),
+								  SHUNT_VOLTAGE_ADDRESS,
+                                  I2C_MEMADD_SIZE_8BIT,
+                                  rx_buffer,
+                                  2,
+                                  Timeout);
+
+        if (status == HAL_OK)
+            break;
+
+        /* Attempt bus recovery only once */
+        if (attempt == 0)
+        {
+            I2C_ClearBus(hi2c);
+        }
+    }
+
+    if (status != HAL_OK)
+        return HAL_ERROR;
+
+    raw = (int16_t)((rx_buffer[0] << 8) | rx_buffer[1]);
+
+    /* INA226 sanity checks */
+    if (raw == 0x7FFF || raw == (int16_t)0x8000)
+    {
+        return HAL_ERROR;   // invalid / overflow reading
+    }
+
+    /* Convert to volts: 2.5 µV per LSB */
+    *Voltage = (float)raw * 2.5e-6f;
+
+    return HAL_OK;
 }
+
 
 void I2C_Scan(I2C_HandleTypeDef *hi2c)
 {
@@ -204,44 +331,54 @@ void I2C_Scan(I2C_HandleTypeDef *hi2c)
   *               the configuration information for the specified I2C.
   * @retval None
   */
-void I2C_ClearBus(I2C_HandleTypeDef *hi2c) {
+void I2C_ClearBus(I2C_HandleTypeDef *hi2c)
+{
     GPIO_InitTypeDef GPIO_InitStruct;
+
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
-
-    // 1. Release I2C peripheral
     HAL_I2C_DeInit(hi2c);
 
-    // 2. Configure SCL & SDA as open-drain outputs
     GPIO_InitStruct.Pin = I2C_SCL_PIN | I2C_SDA_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;   // enable internal PU in case externals missing
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(I2C_GPIO_PORT, &GPIO_InitStruct);
 
-    // 3. Check if SDA is stuck low
-    if (HAL_GPIO_ReadPin(I2C_GPIO_PORT, I2C_SDA_PIN) == GPIO_PIN_RESET) {
+    if (HAL_GPIO_ReadPin(I2C_GPIO_PORT, I2C_SDA_PIN) == GPIO_PIN_RESET)
+    {
         printf("I2C SDA stuck low, pulsing SCL...\n");
-        // Clock SCL up to 16 times
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < 16; i++)
+        {
             HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SCL_PIN, GPIO_PIN_RESET);
-            for (volatile int d=0; d<100; d++); // short delay
+            for (volatile int d = 0; d < 100; d++);
             HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SCL_PIN, GPIO_PIN_SET);
-            for (volatile int d=0; d<100; d++);
+            for (volatile int d = 0; d < 100; d++);
         }
     }
 
-    // 4. Generate STOP
-    HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SDA_PIN, GPIO_PIN_RESET);
-    for (volatile int d=0; d<100; d++);
+    /* Ensure SCL released */
     HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SCL_PIN, GPIO_PIN_SET);
-    for (volatile int d=0; d<100; d++);
+    for (volatile int d = 0; d < 100; d++);
+
+    /* Generate STOP */
+    HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SDA_PIN, GPIO_PIN_RESET);
+    for (volatile int d = 0; d < 100; d++);
+    HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SCL_PIN, GPIO_PIN_SET);
+    for (volatile int d = 0; d < 100; d++);
     HAL_GPIO_WritePin(I2C_GPIO_PORT, I2C_SDA_PIN, GPIO_PIN_SET);
 
-    // 5. Re-init I2C peripheral
-    if (HAL_I2C_Init(hi2c) != HAL_OK) {
-        Error_Handler();
+    if (HAL_GPIO_ReadPin(I2C_GPIO_PORT, I2C_SDA_PIN) == GPIO_PIN_RESET)
+    {
+        printf("I2C bus still stuck after recovery\n");
     }
-    printf("I2C bus recovery complete.\n");
+
+    if (HAL_I2C_Init(hi2c) != HAL_OK)
+    {
+        printf("I2C re-init failed\n");
+        return;
+    }
+
+    printf("I2C bus recovery complete\n");
 }
 

@@ -76,10 +76,14 @@ void Test_Run(void)
 
     /* -------- Calibration -------- */
     parameters[PARAM_X1_MIN_POS_V] = MotorControl_FindMin(MOTOR_1);
+    HAL_Delay(200);
     parameters[PARAM_X1_MAX_POS_V] = MotorControl_FindMax(MOTOR_1);
+    HAL_Delay(200);
 
     parameters[PARAM_X2_MIN_POS_V] = MotorControl_FindMin(MOTOR_2);
+    HAL_Delay(200);
     parameters[PARAM_X2_MAX_POS_V] = MotorControl_FindMax(MOTOR_2);
+    HAL_Delay(200);
 
     MotorControl_UpdateHome();
 
@@ -90,6 +94,7 @@ void Test_Run(void)
             &parameters[PARAM_X1_P15V_I_MIN_MAX],
             &parameters[PARAM_X1_N15V_I_MIN_MAX]
         ) / 1000.0f;
+    HAL_Delay(200);
 
     parameters[PARAM_X1_TIME_MAX_MIN] =
         MotorControl_MaxToMin(
@@ -97,6 +102,7 @@ void Test_Run(void)
             &parameters[PARAM_X1_P15V_I_MAX_MIN],
             &parameters[PARAM_X1_N15V_I_MAX_MIN]
         ) / 1000.0f;
+    HAL_Delay(200);
 
     parameters[PARAM_X2_TIME_MIN_MAX] =
         MotorControl_MinToMax(
@@ -104,6 +110,7 @@ void Test_Run(void)
             &parameters[PARAM_X2_P15V_I_MIN_MAX],
             &parameters[PARAM_X2_N15V_I_MIN_MAX]
         ) / 1000.0f;
+    HAL_Delay(200);
 
     parameters[PARAM_X2_TIME_MAX_MIN] =
         MotorControl_MaxToMin(
@@ -111,19 +118,24 @@ void Test_Run(void)
             &parameters[PARAM_X2_P15V_I_MAX_MIN],
             &parameters[PARAM_X2_N15V_I_MAX_MIN]
         ) / 1000.0f;
+    HAL_Delay(200);
 
     /* -------- Smoothness tests -------- */
     parameters[PARAM_X1_STEP_MIN_MAX] =
         MotorControl_GetSmoothness_MinToMax(MOTOR_1);
+    HAL_Delay(200);
 
     parameters[PARAM_X1_STEP_MAX_MIN] =
         MotorControl_GetSmoothness_MaxToMin(MOTOR_1);
+    HAL_Delay(200);
 
     parameters[PARAM_X2_STEP_MIN_MAX] =
         MotorControl_GetSmoothness_MinToMax(MOTOR_2);
+    HAL_Delay(200);
 
     parameters[PARAM_X2_STEP_MAX_MIN] =
         MotorControl_GetSmoothness_MaxToMin(MOTOR_2);
+    HAL_Delay(200);
 
     /* -------- Send DATA packet -------- */
     printf("DATA,");
@@ -179,4 +191,10 @@ void Test_GotoCorner(uint8_t corner_id)
 
     fflush(stdout);
     g_test_is_running = 1;
+}
+
+void Stop_test(void)
+{
+	Motor_StopAll();
+
 }

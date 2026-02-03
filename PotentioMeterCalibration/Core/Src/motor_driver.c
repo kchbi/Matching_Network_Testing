@@ -68,7 +68,7 @@ void Motor_Set(Motor_ID_t motor, float command)
 void Motor_Stop(Motor_ID_t motor)
 {
     Motor_SetPins(motor, GPIO_PIN_SET, GPIO_PIN_SET);
-    Motor_SetPWM(motor, 0);
+    Motor_SetPWM(motor, PWM_MIN_DUTY);
 }
 
 void Motor_StopAll(void)

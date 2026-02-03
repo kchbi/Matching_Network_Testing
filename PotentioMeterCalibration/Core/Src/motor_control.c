@@ -7,6 +7,9 @@
 #include <math.h>
 #include <stdio.h>
 
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern ADC_HandleTypeDef hadc1;
 
 
 /* ================= CONFIG ================= */
@@ -18,8 +21,8 @@
 
 /* ================= PID PARAMETERS ================= */
 
-static float Kp = 2.2f;
-static float Ki = 0.06f;
+static float Kp = 0.015f;
+static float Ki = 0.002f;
 static float Kd = 0.000f;
 
 
@@ -125,13 +128,13 @@ float MotorControl_FindMin(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, -6.0f);
+    Motor_Set(motor, -5.0f);
 
     while (1) {
         HAL_Delay(100);
         uint16_t cur = Pot1_2[motor];
 
-        if (abs(cur - lastADC) <= 20) {
+        if (abs(cur - lastADC) <= 5) {
             Motor_Stop(motor);
             motorCal[motor].adc_min = cur;
             I2C_ReadVoltage(&hi2c1,
@@ -156,13 +159,13 @@ float MotorControl_FindMax(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, 6.0f);
+    Motor_Set(motor, 5.0f);
 
     while (1) {
         HAL_Delay(100);
         uint16_t cur = Pot1_2[motor];
 
-        if (abs(cur - lastADC) <= 20) {
+        if (abs(cur - lastADC) <= 5) {
             Motor_Stop(motor);
             motorCal[motor].adc_max = cur;
             I2C_ReadVoltage(&hi2c1,
