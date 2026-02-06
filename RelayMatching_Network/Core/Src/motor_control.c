@@ -11,10 +11,10 @@
 
 /* ================= CONFIG ================= */
 
-#define MOVE_TIMEOUT_MS     5000
+#define MOVE_TIMEOUT_MS     10000
 #define SETTLE_DELAY_MS     100
 #define LOOP_DELAY_MS       1
-#define MOVE_TOLERANCE_ADC  10
+#define MOVE_TOLERANCE_ADC  75
 
 /* ================= PID PARAMETERS ================= */
 
@@ -118,37 +118,55 @@ void MotorControl_Init(void)
  * FindMinPositionVoltageMotorX
  * FindMaxPositionVoltageMotorX
  */
-
 float MotorControl_FindMin(Motor_ID_t motor)
 {
     uint16_t lastADC = Pot1_2[motor];
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, -6.0f);
+    Motor_Set(motor, -100.0f);
 
-    while (1) {
+    while (1)
+    {
         HAL_Delay(100);
         uint16_t cur = Pot1_2[motor];
 
-        if (abs(cur - lastADC) <= 20) {
+        if (abs((int32_t)cur - (int32_t)lastADC) <= 20)
+        {
             Motor_Stop(motor);
-            motorCal[motor].adc_min = cur;
-            I2C_ReadVoltage(&hi2c1,
-                            motor == MOTOR_1 ? Pot1 : Pot2,
-                            &voltage);
             break;
         }
 
         lastADC = cur;
 
-        if (HAL_GetTick() - start > MOVE_TIMEOUT_MS) {
+        if (HAL_GetTick() - start > MOVE_TIMEOUT_MS)
+        {
             Motor_Stop(motor);
             break;
         }
     }
+
+    /* ===== Average 500 ADC Samples ===== */
+    uint32_t sum = 0;
+
+    for (int i = 0; i < 500; i++)
+    {
+        sum += Pot1_2[motor];
+        HAL_Delay(2);    // 2ms → 1 second averaging window
+    }
+
+    uint16_t avgADC = (uint16_t)(sum / 500);
+
+    motorCal[motor].adc_min = avgADC;
+
+    /* Read Voltage */
+    I2C_ReadVoltage(&hi2c1,
+                    motor == MOTOR_1 ? Pot1 : Pot2,
+                    &voltage);
+
     return voltage;
 }
+
 
 float MotorControl_FindMax(Motor_ID_t motor)
 {
@@ -156,28 +174,46 @@ float MotorControl_FindMax(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, 6.0f);
+    Motor_Set(motor, 100.0f);
 
-    while (1) {
+    while (1)
+    {
         HAL_Delay(100);
         uint16_t cur = Pot1_2[motor];
 
-        if (abs(cur - lastADC) <= 20) {
+        if (abs((int32_t)cur - (int32_t)lastADC) <= 20)
+        {
             Motor_Stop(motor);
-            motorCal[motor].adc_max = cur;
-            I2C_ReadVoltage(&hi2c1,
-                            motor == MOTOR_1 ? Pot1 : Pot2,
-                            &voltage);
             break;
         }
 
         lastADC = cur;
 
-        if (HAL_GetTick() - start > MOVE_TIMEOUT_MS) {
+        if (HAL_GetTick() - start > MOVE_TIMEOUT_MS)
+        {
             Motor_Stop(motor);
             break;
         }
     }
+
+    /* ===== Average 500 ADC Samples ===== */
+    uint32_t sum = 0;
+
+    for (int i = 0; i < 500; i++)
+    {
+        sum += Pot1_2[motor];
+        HAL_Delay(2);
+    }
+
+    uint16_t avgADC = (uint16_t)(sum / 500);
+
+    motorCal[motor].adc_max = avgADC;
+
+    /* Read Voltage */
+    I2C_ReadVoltage(&hi2c1,
+                    motor == MOTOR_1 ? Pot1 : Pot2,
+                    &voltage);
+
     return voltage;
 }
 

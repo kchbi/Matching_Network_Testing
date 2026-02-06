@@ -20,7 +20,10 @@
 extern uint16_t DevAddress;
 
 // Initializes the INA226 sensor with a given I2C handle and shunt resistor value.
-HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress);
+HAL_StatusTypeDef I2C_Init_INA226(I2C_HandleTypeDef *hi2c,
+                                 uint16_t DevAddress,
+                                 uint16_t config,
+                                 uint16_t calibration);
 
 // Reads the bus voltage in Volts.
 HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c, uint16_t DevAddress , float *Voltage);

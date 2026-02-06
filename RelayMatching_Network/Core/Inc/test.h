@@ -53,7 +53,7 @@ void Test_Run(void);
 /* Corner positioning */
 void Test_GotoCorner(uint8_t corner_id);
 
-
+void Debug_RunMotorConstantPWM(void);
 void Stop_test(void);
 
 #endif /* INC_TEST_H_ */

@@ -22,20 +22,22 @@
 
 static const uint32_t Timeout = 100;
 
-static const float Maximum_Expected_Current = 0.5f;
-static const float Shunt_Resistor_Value     = 0.1f;
+static const float Maximum_Expected_Current = 0.7f;
+//static const float Shunt_Resistor_Value     = 0.1f;
 static const float Current_LSB              = Maximum_Expected_Current / 32768.0f;
-static const float calculated_cal_float     = 0.00512f / (Current_LSB * Shunt_Resistor_Value);
-static const uint16_t calibration_value     = (uint16_t)(calculated_cal_float + 0.5f);
-
-
+//static const float base_cal_float           = 0.00512f / (Current_LSB * Shunt_Resistor_Value);
+//static const float calratio                 = 1.0f;  // Change this to tune calibration
+//static const uint16_t calibration_value     = (uint16_t)(base_cal_float * calratio);  // Truncated
 
 #define ConfigAddress 0x00
 #define CalibrationAddress 0x05
 #define VoltageAddress 0x02
 #define CurrentAddress 0x04
-#define ConfigSettings 0x4527
+#define ConfigSettings 0x4B7F
 #define SHUNT_VOLTAGE_ADDRESS  0x01
+
+
+
 
 /**
  * @brief  Initialize INA226 device with configuration and calibration
@@ -49,7 +51,10 @@ static const uint16_t calibration_value     = (uint16_t)(calculated_cal_float + 
  * @retval HAL_ERROR   Device not responding or verification failed
  */
 
-HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
+HAL_StatusTypeDef I2C_Init_INA226(I2C_HandleTypeDef *hi2c,
+                                 uint16_t DevAddress,
+                                 uint16_t config,
+                                 uint16_t calibration)
 {
     HAL_StatusTypeDef status;
     uint8_t tx_buffer[2];
@@ -61,7 +66,7 @@ HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
         I2C_ClearBus(hi2c);
     }
 
-    /* 2. Check device readiness (retry) */
+    /* 2. Check device readiness */
     for (uint8_t attempt = 0; attempt < 3; attempt++)
     {
         status = HAL_I2C_IsDeviceReady(hi2c,
@@ -72,15 +77,13 @@ HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
             break;
 
         if (attempt == 1)
-        {
             I2C_ClearBus(hi2c);
-        }
     }
 
     if (status != HAL_OK)
         return HAL_ERROR;
 
-    /* 3. Send reset command */
+    /* 3. Reset INA226 */
     tx_buffer[0] = 0x80;
     tx_buffer[1] = 0x00;
 
@@ -94,12 +97,11 @@ HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
     if (status != HAL_OK)
         return HAL_ERROR;
 
-    /* Datasheet: reset completes in ~2 ms */
     HAL_Delay(3);
 
     /* 4. Write configuration register */
-    tx_buffer[0] = (uint8_t)(ConfigSettings >> 8);
-    tx_buffer[1] = (uint8_t)(ConfigSettings & 0xFF);
+    tx_buffer[0] = (uint8_t)(config >> 8);
+    tx_buffer[1] = (uint8_t)(config & 0xFF);
 
     status = HAL_I2C_Mem_Write(hi2c,
                                (DevAddress << 1),
@@ -112,8 +114,8 @@ HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
         return HAL_ERROR;
 
     /* 5. Write calibration register */
-    tx_buffer[0] = (uint8_t)(calibration_value >> 8);
-    tx_buffer[1] = (uint8_t)(calibration_value & 0xFF);
+    tx_buffer[0] = (uint8_t)(calibration >> 8);
+    tx_buffer[1] = (uint8_t)(calibration & 0xFF);
 
     status = HAL_I2C_Mem_Write(hi2c,
                                (DevAddress << 1),
@@ -136,12 +138,13 @@ HAL_StatusTypeDef I2C_Init(I2C_HandleTypeDef *hi2c, uint16_t DevAddress)
     if (status != HAL_OK)
         return HAL_ERROR;
 
-    uint16_t actual_config = (rx_buffer[0] << 8) | rx_buffer[1];
-    if (actual_config != ConfigSettings)
+    uint16_t actual_config = ((uint16_t)rx_buffer[0] << 8) | rx_buffer[1];
+    if (actual_config != config)
         return HAL_ERROR;
 
     return HAL_OK;
 }
+
 
 HAL_StatusTypeDef I2C_ReadVoltage(I2C_HandleTypeDef *hi2c,
                                   uint16_t DevAddress,

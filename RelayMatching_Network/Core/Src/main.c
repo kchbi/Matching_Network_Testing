@@ -128,8 +128,13 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   int cmd_int = 0 ;
-  float voltage2=0;
-  float voltage1=0;
+
+  float currentLog[2000];
+  uint16_t logIndex = 0;
+
+
+//  float voltage2=0;
+//  float voltage1=0;
 
   uart_handler_init(&huart2);
   MotorControl_Init();
@@ -145,35 +150,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		printf("UART Transmission is Successfull\r\n");
-//        I2C_ReadVoltage(&hi2c1,Pot1,&voltage2);
-//        HAL_Delay(100);
-//        I2C_ReadVoltage(&hi2c1,Pot2,&voltage1);
-
-		Motor_Set(MOTOR_2,5.0f);
-		Motor_Set(MOTOR_2,-5.0f);
-
-
-//		MotorControl_MoveToADC(MOTOR_1,
-//		                            160,
-//		                            10);
-//		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
-//		MotorControl_MoveToADC(MOTOR_1,
-//		                            3500,
-//		                            10);
-////		Motor_Set(MOTOR_1, 110);
-//////		printf("ADC1=%u ADC2=%u\n", Pot1_2[0], Pot1_2[1]);
-////		float vsh;
-////		float cur;
-////		I2C_ReadShuntVoltage(&hi2c1, T15V, &vsh);
-////		I2C_ReadCurrent(&hi2c1, T15V, &cur);
-
-
-
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
 
-		if (uart_command_is_ready()) {
+
+        if (uart_command_is_ready()) {
 
 			const char *command = (const char*) uart_get_command_buffer();
 
