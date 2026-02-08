@@ -25,7 +25,7 @@ typedef enum {
 } Motor_ID_t;
 
 void Motor_Init(void);
-void Motor_Set(Motor_ID_t motor, float command);
+void Motor_Set(Motor_ID_t motor, float target_cmd);
 void Motor_Stop(Motor_ID_t motor);
 void Motor_StopAll(void);
 
