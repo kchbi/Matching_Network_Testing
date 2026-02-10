@@ -124,14 +124,14 @@ float MotorControl_FindMin(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, -100.0f);
+    Motor_Set(motor, -110.0f);
 
     while (1)
     {
-        HAL_Delay(100);
+        HAL_Delay(200);
         uint16_t cur = Pot1_2[motor];
 
-        if (abs((int32_t)cur - (int32_t)lastADC) <= 20)
+        if (abs((int32_t)cur - (int32_t)lastADC) <= 10)
         {
             Motor_Stop(motor);
             break;
@@ -174,14 +174,17 @@ float MotorControl_FindMax(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, 100.0f);
+    Motor_Set(motor, 110.0f);
+    HAL_Delay(300);
 
     while (1)
     {
-        HAL_Delay(100);
+    	HAL_Delay(100);
+
+
         uint16_t cur = Pot1_2[motor];
 
-        if (abs((int32_t)cur - (int32_t)lastADC) <= 20)
+        if (abs((int32_t)cur - (int32_t)lastADC) <= 10)
         {
             Motor_Stop(motor);
             break;
