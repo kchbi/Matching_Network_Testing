@@ -29,7 +29,7 @@ void Motor_Set(Motor_ID_t motor, float target_cmd);
 void Motor_Stop(Motor_ID_t motor);
 void Motor_StopAll(void);
 
-
+void Motor_RampUpdate(Motor_ID_t motor);
 
 
 #endif /* INC_MOTOR_DRIVER_H_ */

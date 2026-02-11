@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include "stm32f4xx_it.h"
 
 
 
@@ -52,6 +53,7 @@ static MotorCalibration_t motorCal[2] = {
 
 static PID_State_t pidState[2];
 uint16_t volatile Pot1_2[2];
+
 
 
 
@@ -110,7 +112,9 @@ void MotorControl_Init(void)
 {
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
     HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&Pot1_2, 2);
+
 }
 
 /* ================= CALIBRATION ================= */
