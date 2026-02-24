@@ -149,6 +149,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+
+
+//		Motor_Set(MOTOR_2, 120);
+//
+//		HAL_Delay(1000);
+//		Motor_Set(MOTOR_2,0);
+//		HAL_Delay(20);
+//
+//		Motor_Set(MOTOR_2,-120);
+//		HAL_Delay(1000);
+//		Motor_Set(MOTOR_2,0);
+//		HAL_Delay(20);
+
+
+
 		printf("UART Transmission is Successfull\r\n");
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)

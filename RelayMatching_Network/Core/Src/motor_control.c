@@ -124,7 +124,7 @@ float MotorControl_FindMin(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, -100.0f);
+    Motor_Set(motor, -120.0f);
 
     while (1)
     {
@@ -174,7 +174,7 @@ float MotorControl_FindMax(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, 100.0f);
+    Motor_Set(motor, 120.0f);
 
     while (1)
     {
@@ -261,7 +261,7 @@ void MotorControl_MoveToADC(Motor_ID_t motor,
             }
         }
 
-        if (I2C_ReadCurrent(&hi2c1, T15VN, &instCurrent) == HAL_OK) {
+        if (I2C_ReadCurrent(&hi2c1, T24V, &instCurrent) == HAL_OK) {
             float absI = fabsf(instCurrent);
             if (motor == MOTOR_1) {
                 if (absI > Max_NCurrent_M1) Max_NCurrent_M1 = absI;
@@ -272,6 +272,7 @@ void MotorControl_MoveToADC(Motor_ID_t motor,
 
         if (labs(error) <= tolerance) {
             Motor_Stop(motor);
+            HAL_Delay(100);
             return;
         }
 

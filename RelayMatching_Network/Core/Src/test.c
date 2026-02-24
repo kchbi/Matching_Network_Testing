@@ -53,10 +53,10 @@ void Test_Init(void)
 
     HAL_Delay(100);
 
-    if (I2C_Init_INA226(&hi2c1, T15VN, currentConfig, calibration_value) != HAL_OK)
-        printf("Failed to initialize -15V INA226\r\n");
+    if (I2C_Init_INA226(&hi2c1, T24V, currentConfig, calibration_value) != HAL_OK)
+        printf("Failed to initialize 24V INA226\r\n");
     else
-        printf(" -15V INA226 initialized\r\n");
+        printf(" 24V INA226 initialized\r\n");
 
     HAL_Delay(100);
 
@@ -106,7 +106,7 @@ void Test_Run(void)
         MotorControl_MinToMax(
             MOTOR_1,
             &parameters[PARAM_X1_P15V_I_MIN_MAX],
-            &parameters[PARAM_X1_N15V_I_MIN_MAX]
+            &parameters[PARAM_X1_24V_I_MIN_MAX]
         ) / 1000.0f;
     HAL_Delay(200);
 
@@ -114,7 +114,7 @@ void Test_Run(void)
         MotorControl_MaxToMin(
             MOTOR_1,
             &parameters[PARAM_X1_P15V_I_MAX_MIN],
-            &parameters[PARAM_X1_N15V_I_MAX_MIN]
+            &parameters[PARAM_X1_24V_I_MAX_MIN]
         ) / 1000.0f;
     HAL_Delay(200);
 
@@ -122,7 +122,7 @@ void Test_Run(void)
         MotorControl_MinToMax(
             MOTOR_2,
             &parameters[PARAM_X2_P15V_I_MIN_MAX],
-            &parameters[PARAM_X2_N15V_I_MIN_MAX]
+            &parameters[PARAM_X2_24V_I_MIN_MAX]
         ) / 1000.0f;
     HAL_Delay(200);
 
@@ -130,7 +130,7 @@ void Test_Run(void)
         MotorControl_MaxToMin(
             MOTOR_2,
             &parameters[PARAM_X2_P15V_I_MAX_MIN],
-            &parameters[PARAM_X2_N15V_I_MAX_MIN]
+            &parameters[PARAM_X2_24V_I_MAX_MIN]
         ) / 1000.0f;
     HAL_Delay(200);
 

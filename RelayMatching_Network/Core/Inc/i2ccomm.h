@@ -10,10 +10,10 @@
 
 #include "stm32f4xx_hal.h"
 
-#define T15VP      (0x45)
-#define T15VN      (0x40)
+#define T15VP      (0x40)
+#define T24V       (0x45)
 #define Pot1       (0x4C)
-#define Pot2       (0x42)
+#define Pot2       (0x48)
 
 
 // --- Public Function Prototypes ---

@@ -26,9 +26,9 @@ static void Motor_SetPins(Motor_ID_t motor, GPIO_PinState in1, GPIO_PinState in2
 static void Motor_SetPWM(Motor_ID_t motor, uint32_t pwm)
 {
     if (motor == MOTOR_1) {
-        TIM1->CCR1 = pwm;
-    } else {
         TIM2->CCR1 = pwm;
+    } else {
+        TIM1->CCR1 = pwm;
     }
 }
 
@@ -67,7 +67,7 @@ void Motor_Set(Motor_ID_t motor, float command)
 
 void Motor_Stop(Motor_ID_t motor)
 {
-    Motor_SetPins(motor, GPIO_PIN_SET, GPIO_PIN_SET);
+    Motor_SetPins(motor, GPIO_PIN_RESET, GPIO_PIN_RESET);
     Motor_SetPWM(motor, 0);
 }
 

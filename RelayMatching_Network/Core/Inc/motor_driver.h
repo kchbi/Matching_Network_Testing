@@ -13,8 +13,8 @@
 #include "stm32f4xx_hal.h"
 
 #define MOTOR_GPIO_PORT GPIOE
-#define MOTOR1_IN1          GPIO_PIN_7
-#define MOTOR1_IN2          GPIO_PIN_8
+#define MOTOR1_IN1          GPIO_PIN_8
+#define MOTOR1_IN2          GPIO_PIN_7
 #define MOTOR2_IN1          GPIO_PIN_9
 #define MOTOR2_IN2          GPIO_PIN_10
 
