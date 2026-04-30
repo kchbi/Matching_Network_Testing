@@ -26,10 +26,8 @@ extern float parameters[NUM_PARAMETERS] ;
 
 typedef enum {
 
-	PARAM_X1_MIN_POS_V = 0,
-	PARAM_X1_MAX_POS_V = 1,
-	PARAM_X2_MIN_POS_V = 2,
-	PARAM_X2_MAX_POS_V = 3,
+	PARAM_X1_V = 0,
+	PARAM_X2_V = 1,
 
 } ParameterIndex_t;
 

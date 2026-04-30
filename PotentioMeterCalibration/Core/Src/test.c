@@ -75,7 +75,7 @@ static void Calibrate_Pot(Motor_ID_t motor, uint8_t is_max)
     Motor_Set(motor, cmd);
 }
 
-static void Stream_Pot_Value(Motor_ID_t motor, ParameterIndex_t param_index)
+void Stream_Pot_Value(Motor_ID_t motor, ParameterIndex_t param_index)
 {
     float voltage = 0.0f;
 

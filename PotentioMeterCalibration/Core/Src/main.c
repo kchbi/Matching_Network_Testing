@@ -180,7 +180,8 @@ int main(void)
 		switch (g_test_is_running) {
 		case 0:
 			/* Full automated test */
-
+			Stream_Pot_Value(MOTOR_1, ParameterIndex_t param_inde)
+			Stream_Pot_Value(Motor_ID_t motor, ParameterIndex_t param_index)
 			break;
 		case 1:
 			Stop_test();

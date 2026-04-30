@@ -61,7 +61,7 @@ void Test_Init(void)
     HAL_Delay(100);
 
     // Init voltage-only INA226s (Pot1 & Pot2)
-    const uint16_t potVoltageConfig    = 0x69E7;  // High-accuracy VBUS, AVG=256, MODE=Bus Voltage Only
+    const uint16_t potVoltageConfig    = 0x4FE7;  // High-accuracy VBUS, AVG=256, MODE=Bus Voltage Only
     const uint16_t potVoltageCalReg    = 0x1000;  // Arbitrary valid calibration value
 
     if (I2C_Init_INA226(&hi2c1, Pot1, potVoltageConfig, potVoltageCalReg) != HAL_OK)

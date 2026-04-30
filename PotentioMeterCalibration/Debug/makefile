@@ -66,8 +66,8 @@ all: main-build
 main-build: PotentioMeterCalibration.elf secondary-outputs
 
 # Tool invocations
-PotentioMeterCalibration.elf PotentioMeterCalibration.map: $(OBJS) $(USER_OBJS) C:\Users\AdityaSingh\OneDrive\ -\ Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "PotentioMeterCalibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\AdityaSingh\OneDrive - Skylinesemi\Desktop\TestSystem\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PotentioMeterCalibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+PotentioMeterCalibration.elf PotentioMeterCalibration.map: $(OBJS) $(USER_OBJS) C:\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "PotentioMeterCalibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Matching_Network_Testing\PotentioMeterCalibration\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PotentioMeterCalibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

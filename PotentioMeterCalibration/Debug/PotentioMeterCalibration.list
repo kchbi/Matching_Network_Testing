@@ -41,13 +41,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  18 .debug_line   0001872c  00000000  00000000  0004b7bc  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000dd741  00000000  00000000  00063ee8  2**0
+ 19 .debug_str    000dd705  00000000  00000000  00063ee8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000043  00000000  00000000  00141629  2**0
+ 20 .comment      00000043  00000000  00000000  001415ed  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00005ac8  00000000  00000000  0014166c  2**2
+ 21 .debug_frame  00005ac8  00000000  00000000  00141630  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 22 .debug_line_str 0000009f  00000000  00000000  00147134  2**0
+ 22 .debug_line_str 00000063  00000000  00000000  001470f8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1475,7 +1475,6 @@ int main(void)
  8000bb4:	08000c55 	.word	0x08000c55
 		case 0:
 			/* Full automated test */
-
 			break;
 		case 1:
 			Stop_test();
