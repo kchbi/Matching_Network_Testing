@@ -18,7 +18,7 @@
 #define MOTOR2_IN2          GPIO_PIN_10
 
 #define PWM_MAX_DUTY        4200
-#define PWM_MIN_DUTY        400      /* ← TUNE THIS to your motor's stiction */
+#define PWM_MIN_DUTY        1600     /* ← TUNE THIS to your motor's stiction */
                                      /*    Start with 400 (~10% of 4200).    */
                                      /*    Increase if motor still stalls    */
                                      /*    near target; decrease if it       */

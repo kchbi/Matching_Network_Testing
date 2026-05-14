@@ -19,10 +19,10 @@
 
 /* ================= PID PARAMETERS ================= */
 
-static float Kp = 7.5f;    //1.2f
-static float Ki = 0.0f;   //5.0f
-static float Kd = 0.2f;
-#define BANDPWM 2500
+static float Kp = 2.0f;    //1.2f
+static float Ki = 12.0f;   //5.0f
+static float Kd = 0.3f;
+#define BANDPWM 2200
 
 /* ================= PID STATE ================= */
 
@@ -92,7 +92,7 @@ static float PID_Run_Fixed(PID_State_t *pid, float error, float currentADC)
     if (!sat_hi && !sat_lo && Ki > 0.0f) {
         pid->integral += error * PID_DT_S;
     }
-    const float I_LIMIT = (Ki > 0.0f) ? (PWM_MAX_DUTY * 0.5f / Ki) : 0.0f;
+    const float I_LIMIT = 2500.0f ;
     if (pid->integral >  I_LIMIT) pid->integral =  I_LIMIT;
     if (pid->integral < -I_LIMIT) pid->integral = -I_LIMIT;
     float I = Ki * pid->integral;
@@ -131,7 +131,7 @@ void MotorControl_PID_ISR(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM6) {
-    	pid_isr_count++;
+//    	pid_isr_count++;
         MotorControl_PID_ISR();
     }
 }
@@ -186,8 +186,9 @@ void MotorControl_ServiceI2C(Motor_ID_t motor)
         else                  { if (a > Max_PCurrent_M2) Max_PCurrent_M2 = a; }
     }
 
-    float P15N = 24.0f*I24 - 15.0f*I15P - ConstantPower;
-    float a    = fabsf(P15N / 15.0f);
+//    float P15N = 24.0f*I24 - 15.0f*I15P - ConstantPower;
+//    float a    = fabsf(P15N / 15.0f);
+    float a = 0.0f;
     if (motor == MOTOR_1) { if (a > Max_NCurrent_M1) Max_NCurrent_M1 = a; }
     else                  { if (a > Max_NCurrent_M2) Max_NCurrent_M2 = a; }
 }

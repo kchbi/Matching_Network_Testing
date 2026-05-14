@@ -136,13 +136,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		static uint32_t last_isr_print = 0;
-		if (HAL_GetTick() - last_isr_print >= 1000) {
-		    last_isr_print = HAL_GetTick();
-		    printf("ISR/sec = %lu\r\n", pid_isr_count);
-
-		}
-		printf("UART Transmission is Successfull\r\n");
+//		static uint32_t last_isr_print = 0;
+//		if (HAL_GetTick() - last_isr_print >= 1000) {
+//		    last_isr_print = HAL_GetTick();
+//		    printf("ISR/sec = %lu\r\n", pid_isr_count);
+//		}
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
