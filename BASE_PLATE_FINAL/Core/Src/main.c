@@ -29,7 +29,6 @@
 #include <math.h>
 #include "i2ccomm.h"
 #include "motor_control.h"
-#include "motor_driver.h"
 #include "test.h"
 #include "relay_driver.h"
 /* USER CODE END Includes */
@@ -142,11 +141,10 @@ int main(void)
 //		    last_isr_print = HAL_GetTick();
 //		    printf("ISR/sec = %lu\r\n", pid_isr_count);
 //		}
-		Motor_Set(MOTOR_2, 2500);
+//		Motor_Set(MOTOR_2, -3300);
 
-		Motor_Set(MOTOR_2, 0);
-
-
+//
+//		Motor_Set(MOTOR_2, -3300);
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */

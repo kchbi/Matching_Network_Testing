@@ -130,7 +130,7 @@ void Test_Run(void)
     HAL_Delay(200);
 
     parameters[PARAM_X2_TIME_MAX_MIN] =
-    			MotorControl_MaxToMin(
+        MotorControl_MaxToMin(
             MOTOR_2,
             &parameters[PARAM_X2_P15V_I_MAX_MIN],
 			&parameters[PARAM_X2_N15V_I_MAX_MIN],
@@ -178,27 +178,23 @@ void Test_GotoCorner(uint8_t corner_id)
     switch (corner_id) {
 
         case 1:
-        	printf("MIN MIN \r\n");
-        	Motor_Set(MOTOR_1, -2200);
-        	Motor_Set(MOTOR_2, -2200);
+        	printf("Relay Config 1 On \r\n");
+        	set_relay_combination(1);
             break;
 
         case 2: /* MIN / MAX */
-        	printf("MIN MAX \r\n");
-        	Motor_Set(MOTOR_1, -2200);
-        	Motor_Set(MOTOR_2, 2200);
+        	printf("Relay Config 2 On \r\n");
+        	set_relay_combination(2);
             break;
 
         case 3: /* MAX / MIN */
-        	printf("MAX MIN \r\n");
-        	Motor_Set(MOTOR_1, 2200);
-        	Motor_Set(MOTOR_2, -2200);
+        	printf("Relay Config 3 On \r\n");
+        	set_relay_combination(4);
             break;
 
         case 4: /* MAX / MAX */
-        	printf("MAX MAX \r\n");
-        	Motor_Set(MOTOR_1, 2200);
-        	Motor_Set(MOTOR_2, 2200);
+        	printf("All Relay off \r\n");
+        	set_relay_combination(0);
             break;
 
         default:
@@ -207,7 +203,7 @@ void Test_GotoCorner(uint8_t corner_id)
     }
 
     fflush(stdout);
-//    g_test_is_running = 1;
+    g_test_is_running = 1;
 }
 
 void Stop_test(void)
