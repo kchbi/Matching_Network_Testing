@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-
+#include "DAC_Generator.h"
+#include <stdbool.h>
 
 
 /* ================= CONFIG ================= */
@@ -17,31 +18,15 @@
 #define MOVE_TOLERANCE_ADC  50
 #define REDUCE_EMF_MS       1000
 
-/* ================= PID PARAMETERS ================= */
 
-static float Kp = 1.2f;    //1.2f
-static float Ki = 10.0f;   //5.0f
-static float Kd = 0.3f;
-#define BANDPWM 4200
+#define MAX_POS 4095
+#define MIN_POS 0
+#define MID_POS 2048
 
-/* ================= PID STATE ================= */
-
-/* ================= PID STATE ================= */
-typedef struct {
-    float    integral;
-    float    previousADC;
-    float    d_filtered;     // NEW: filtered derivative
-} PID_State_t;
-
-#define PID_DT_S   0.001f
 /* ================= TASK STATE (shared with ISR) ================= */
 typedef struct {
-    volatile uint8_t  active;
-    volatile uint16_t targetADC;
-    volatile uint16_t tolerance;
-    volatile uint8_t  done_flag;
-    volatile uint32_t start_tick;
-    PID_State_t       pid;
+	uint16_t target;
+	uint16_t actual;
 } MotorTask_t;
 
 static MotorTask_t mtask[2];
@@ -79,78 +64,10 @@ void MotorControl_Init(void)
     HAL_Delay(10);
 }
 
-/* ============== Fixed-rate PID (called from TIM6 ISR @ 1 kHz) ============== */
-static float PID_Run_Fixed(PID_State_t *pid, float error, float currentADC)
-{
-    /* P */
-    float P = Kp * error;
-
-    /* I with conditional integration (anti-windup) */
-    float pre_out = P + Ki * pid->integral;
-    uint8_t sat_hi = (pre_out >  PWM_MAX_DUTY) && (error > 0);
-    uint8_t sat_lo = (pre_out < -PWM_MAX_DUTY) && (error < 0);
-    if (!sat_hi && !sat_lo && Ki > 0.0f) {
-        pid->integral += error * PID_DT_S;
-    }
-    const float I_LIMIT = 2500.0f ;
-    if (pid->integral >  I_LIMIT) pid->integral =  I_LIMIT;
-    if (pid->integral < -I_LIMIT) pid->integral = -I_LIMIT;
-    float I = Ki * pid->integral;
-
-    /* D on measurement, low-pass filtered */
-    float d_adc = (currentADC - pid->previousADC) / PID_DT_S;
-    const float alpha = 0.15f;
-    pid->d_filtered = alpha * d_adc + (1.0f - alpha) * pid->d_filtered;
-    float D = -Kd * pid->d_filtered;
-
-    pid->previousADC = currentADC;
-    return P + I + D;
-}
-/* ================= ISR — runs at 1 kHz from TIM6 ================= */
-void MotorControl_PID_ISR(void)
-{
-    for (int m = 0; m < 2; m++) {
-        if (!mtask[m].active) continue;
-
-        uint16_t curADC = Pot1_2[m];
-        int32_t  error  = (int32_t)mtask[m].targetADC - (int32_t)curADC;
-
-        /* Target reached? */
-        if (labs(error) <= mtask[m].tolerance) {
-            Motor_Stop((Motor_ID_t)m);
-            mtask[m].pid.integral = 0.0f;
-            mtask[m].active    = 0;
-            mtask[m].done_flag = 1;
-            continue;
-        }
-
-        float cmd = PID_Run_Fixed(&mtask[m].pid, (float)error, (float)curADC);
-        Motor_Set((Motor_ID_t)m, cmd);
-    }
-}
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM6) {
-//    	pid_isr_count++;
-        MotorControl_PID_ISR();
-    }
-}
-
 /* ================= NON-BLOCKING API ================= */
-void MotorControl_StartMove(Motor_ID_t motor, uint16_t targetADC, uint16_t tolerance)
+void MotorControl_StartMove(Motor_ID_t motor, uint16_t targetPOS)
 {
-    /* Disable interrupts briefly while we set up shared state */
-    __disable_irq();
-    mtask[motor].pid.integral    = 0.0f;
-    mtask[motor].pid.previousADC = (float)Pot1_2[motor];
-    mtask[motor].pid.d_filtered  = 0.0f;
-    mtask[motor].targetADC       = targetADC;
-    mtask[motor].tolerance       = tolerance;
-    mtask[motor].done_flag       = 0;
-    mtask[motor].start_tick      = HAL_GetTick();
-    mtask[motor].active          = 1;        // ISR picks this up next tick
-    __enable_irq();
-
+	Motor_Set(motor, targetPOS);
     /* Reset peak current trackers */
     if (motor == MOTOR_1) {
         Max_PCurrent_M1 = Max_NCurrent_M1 = Max_24VCurrent_M1 = 0.0f;
@@ -158,7 +75,15 @@ void MotorControl_StartMove(Motor_ID_t motor, uint16_t targetADC, uint16_t toler
         Max_PCurrent_M2 = Max_NCurrent_M2 = Max_24VCurrent_M2 = 0.0f;
     }
 }
-uint8_t MotorControl_IsBusy(Motor_ID_t motor) { return mtask[motor].active; }
+bool MotorControl_IsBusy(Motor_ID_t motor){
+	int32_t error;
+	uint16_t currADC = Pot1_2[motor];
+	int32_t error = previousADC - currADC;
+	if (abs(error) < tolerance ){
+		return false:
+	}
+	return true;
+}
 
 void MotorControl_Abort(Motor_ID_t motor)
 {
@@ -193,17 +118,28 @@ void MotorControl_ServiceI2C(Motor_ID_t motor)
     else                  { if (a > Max_NCurrent_M2) Max_NCurrent_M2 = a; }
 }
 
-void MotorControl_MoveToADC(Motor_ID_t motor, uint16_t targetADC, uint16_t tolerance)
+void MotorControl_MoveToADC(Motor_ID_t motor, uint16_t targetPOS)
 {
-    MotorControl_StartMove(motor, targetADC, tolerance);
+    Motor_Set(motor, targetPOS);
 
-    while (mtask[motor].active) {
+    uint32_t start = HAL_GetTick();
+
+    while(1)
+    {
         MotorControl_ServiceI2C(motor);
 
-        if (HAL_GetTick() - mtask[motor].start_tick > MOVE_TIMEOUT_MS) {
-            MotorControl_Abort(motor);
+        if(abs((int32_t)Pot1_2[motor] -
+               (int32_t)targetPOS) < MOVE_TOLERANCE_ADC)
+        {
             return;
         }
+
+        if(HAL_GetTick() - start > MOVE_TIMEOUT_MS)
+        {
+            return;
+        }
+
+        HAL_Delay(1);
     }
 }
 void MotorControl_MoveAndMeasureSmoothness(
@@ -251,7 +187,7 @@ float MotorControl_FindMax(Motor_ID_t motor)
     uint32_t start = HAL_GetTick();
     float voltage = -1.0f;
 
-    Motor_Set(motor, BANDPWM);   //1700
+    Motor_Set(motor,DAC_MAX_VAL);   //1700
 
     while (1)
     {
@@ -285,20 +221,10 @@ float MotorControl_FindMax(Motor_ID_t motor)
 
     uint16_t avgADC = (uint16_t)(sum / 500);
 
-    motorCal[motor].adc_max = avgADC - 100;
+    motorCal[motor].adc_max = avgADC;
 
     /* Read Voltage */
-    if (I2C_Init_INA226(&hi2c1, motor == MOTOR_1 ? Pot1 : Pot2, 0x4FE6, 0x1000) != HAL_OK)
-        printf("Failed to initialize Pot1/2 INA226\r\n");
-    else{
-    	printf("Pot1/2 INA226 initialized\r\n");
-    }
-	if (I2C_WaitForConversionPolling(&hi2c1, motor == MOTOR_1 ? Pot1 : Pot2, 1024, 9.344f) != HAL_OK) {
-	    printf("Polling timeout or I2C error!\r\n");
-	}
-    I2C_ReadVoltage(&hi2c1,
-                    motor == MOTOR_1 ? Pot1 : Pot2,
-                    &voltage);
+    voltage = (motorCal[motor].adc_max/4095)*10;
     Motor_Stop(motor);
 
     return voltage;
@@ -343,20 +269,11 @@ float MotorControl_FindMin(Motor_ID_t motor)
 
     uint16_t avgADC = (uint16_t)(sum / 500);
 
-    motorCal[motor].adc_min = avgADC + 100;
+    motorCal[motor].adc_min = avgADC ;
 
     /* Read Voltage */
-    if (I2C_Init_INA226(&hi2c1, motor == MOTOR_1 ? Pot1 : Pot2, 0x4FE6, 0x1000) != HAL_OK)
-        printf("Failed to initialize Pot1/2 INA226\r\n");
-    else{
-    	printf("Pot1/2 INA226 initialized\r\n");
-    }
-	if (I2C_WaitForConversionPolling(&hi2c1, motor == MOTOR_1 ? Pot1 : Pot2, 1024, 9.344f) != HAL_OK) {
-	    printf("Polling timeout or I2C error!\r\n");
-	}
-    I2C_ReadVoltage(&hi2c1,
-                    motor == MOTOR_1 ? Pot1 : Pot2,
-                    &voltage);
+    voltage = (motorCal[motor].adc_min/4095)*10;
+
     Motor_Stop(motor);
 
     return voltage;
@@ -364,13 +281,8 @@ float MotorControl_FindMin(Motor_ID_t motor)
 
 void MotorControl_UpdateHome(void)
 {
-    for (int i = 0; i < 2; i++) {
-        motorCal[i].adc_home =
-            (motorCal[i].adc_min + motorCal[i].adc_max) / 2;
-    }
-    MotorControl_MoveToADC(MOTOR_1, motorCal[MOTOR_1].adc_home, MOVE_TOLERANCE_ADC);
-    MotorControl_MoveToADC(MOTOR_2, motorCal[MOTOR_2].adc_home, MOVE_TOLERANCE_ADC);
-
+    MotorControl_MoveToADC(MOTOR_1, MID_POS);
+    MotorControl_MoveToADC(MOTOR_2, MID_POS);
 }
 
 /* ================= TEST HELPERS ================= */
@@ -382,12 +294,12 @@ void MotorControl_UpdateHome(void)
 uint32_t MotorControl_MinToMax(Motor_ID_t motor, float *P15, float *N15,float *V24)
 {
     /* Go to MIN first (no timing) */
-    MotorControl_MoveToADC(motor, motorCal[motor].adc_min, MOVE_TOLERANCE_ADC);
+    MotorControl_MoveToADC(motor, MIN_POS);
 
     uint32_t t0 = HAL_GetTick();
 
     /* Timed move MIN → MAX */
-    MotorControl_MoveToADC(motor, motorCal[motor].adc_max, MOVE_TOLERANCE_ADC);
+    MotorControl_MoveToADC(motor, MAX_POS);
 
 
     uint32_t t1 = HAL_GetTick();

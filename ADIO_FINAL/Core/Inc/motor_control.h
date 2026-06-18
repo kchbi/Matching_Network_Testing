@@ -20,7 +20,6 @@ extern float Max_PCurrent_M2;
 extern I2C_HandleTypeDef hi2c1;
 
 void MotorControl_Init(void);
-extern volatile uint32_t pid_isr_count;
 /* ================= Calibration / Homing ================= */
 /* Maps from:
  * FindMinPositionVoltageMotorX
@@ -36,8 +35,7 @@ void MotorControl_Abort(Motor_ID_t motor);
  * moveMotorXToADCValue
  */
 void MotorControl_MoveToADC(Motor_ID_t motor,
-                            uint16_t targetADC,
-                            uint16_t tolerance);
+                            uint16_t targetPOS);
 
 /* ================= Smoothness ================= */
 /* Maps from:
