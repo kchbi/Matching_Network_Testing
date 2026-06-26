@@ -20,6 +20,7 @@
  * @param htim Pointer to the Timer handle that provides the trigger.
  * @retval None
  */
-void DACGenerator_Start(DAC_HandleTypeDef *hdac, uint32_t channel, float voltage, float vref );
+void DACGenerator_Start(DAC_HandleTypeDef *hdac, uint32_t channel, uint16_t command );
 void DACGenerator_Stop(DAC_HandleTypeDef* hdac, uint32_t channel);
+extern DAC_HandleTypeDef hdac;
 #endif /* INC_DAC_GENERATOR_H_ */

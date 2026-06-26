@@ -17,15 +17,17 @@
 /* Private function prototypes -----------------------------------------------*/
 // This function is only used inside this file, so we declare it 'static'.
 
-void DACGenerator_Start(DAC_HandleTypeDef *hdac, uint32_t channel, uint16_t command )
+void DACGenerator_Start(DAC_HandleTypeDef *hdac,
+                      uint32_t channel,
+                      uint16_t command)
 {
-    // If that channel was previously running with DMA, stop it first
-    // (safe-guard — HAL_DAC_Stop will also work when no DMA was used)
-    HAL_DAC_Stop(hdac, channel);
-    // Start only that channel and set the value
-    HAL_DAC_SetValue(hdac, channel, DAC_ALIGN_12B_R, command);
-    HAL_DAC_Start(hdac, channel);
+    if (command > 4095U)
+        command = 4095U;
 
+    HAL_DAC_SetValue(hdac,
+                     channel,
+                     DAC_ALIGN_12B_R,
+                     command);
 }
 
 

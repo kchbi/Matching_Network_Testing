@@ -31,6 +31,7 @@
 #include "motor_control.h"
 #include "test.h"
 #include "relay_driver.h"
+#include "DAC_Generator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -128,7 +129,6 @@ int main(void)
   int cmd_int = 0 ;
   uart_handler_init(&huart2);
   MotorControl_Init();
-  HAL_TIM_Base_Start_IT(&htim6);
   Test_Init();
   /* USER CODE END 2 */
 
@@ -140,22 +140,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		static uint32_t last_isr_print = 0;
-//		if (HAL_GetTick() - last_isr_print >= 1000) {
-//		    last_isr_print = HAL_GetTick();
-//		    printf("ISR/sec = %lu\r\n", pid_isr_count);
-//		}
-//		Motor_Set(MOTOR_2, -3300);
-//		for (int i = 100; i < 4200; i += 100)
-//		{
-//		    Motor_Set(MOTOR_1, i);
-//		    HAL_Delay(50);
-//		}
-//
-//		Motor_Set(MOTOR_2, -3300);
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
+		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 4000);
+		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 2000);
+
+
 
 
         if (uart_command_is_ready()) {
@@ -232,29 +223,25 @@ int main(void)
 		{
 		    if (cmd_int < 0)   cmd_int = 0;
 		    if (cmd_int > 100) cmd_int = 100;
-		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_1);
 
-		    uint16_t targetADC =
-		        cal->adc_min +
-		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
+		    uint16_t targetPOS =
+		        (uint16_t)(((uint32_t)cmd_int * MAX_POS) / 100U);
 
+		    MotorControl_MoveToADC(MOTOR_1, targetPOS);
 
-		    MotorControl_MoveToADC(MOTOR_1, targetADC, 10);
-		    g_test_is_running = 1;   // return to idle
+		    g_test_is_running = 1;
 		    break;
 		}
-
 		case 7:   // CMD:SET_M2 <0..100>
 		{
 		    if (cmd_int < 0)   cmd_int = 0;
 		    if (cmd_int > 100) cmd_int = 100;
-		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_2);
-		    uint16_t targetADC =
-		        cal->adc_min +
-		        (cmd_int * (cal->adc_max - cal->adc_min)) / 100;
 
+		    uint16_t targetPOS =
+		        (uint16_t)(((uint32_t)cmd_int * MAX_POS) / 100U);
 
-		    MotorControl_MoveToADC(MOTOR_2, targetADC, 10);
+		    MotorControl_MoveToADC(MOTOR_2, targetPOS);
+
 		    g_test_is_running = 1;
 		    break;
 		}
@@ -646,14 +633,15 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA9 PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+  /*Configure GPIO pins : PA9 PA10 PA11 PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

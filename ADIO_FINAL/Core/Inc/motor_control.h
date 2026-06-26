@@ -43,9 +43,8 @@ void MotorControl_MoveToADC(Motor_ID_t motor,
  */
 void MotorControl_MoveAndMeasureSmoothness(
         Motor_ID_t motor,
-        uint16_t targetADC,
+        uint16_t targetPOS,
         uint32_t expected_duration_ms,
-        uint16_t tolerance,
         int32_t *max_error_out);
 
 /* ================= Test Helpers ================= */
@@ -61,10 +60,10 @@ uint32_t MotorControl_MaxToMin(Motor_ID_t motor,float * P15 , float * N15, float
 float MotorControl_GetSmoothness_MinToMax(Motor_ID_t motor);
 float MotorControl_GetSmoothness_MaxToMin(Motor_ID_t motor);
 
-/* ================= Access ================= */
-
-MotorCalibration_t* MotorControl_GetCalibration(Motor_ID_t motor);
 extern uint16_t volatile Pot1_2[2];
+#define MIN_POS 0U
+#define MID_POS 2048U
+#define MAX_POS 4095U
 
 
 #endif
