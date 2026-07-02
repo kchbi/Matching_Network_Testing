@@ -143,10 +143,39 @@ int main(void)
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
-		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 4000);
-		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 2000);
-
-
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 2048);
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 2048);
+//
+//		HAL_Delay(200);
+//
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 3800);
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 3800);
+//
+//		HAL_Delay(200);
+//
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 200);
+//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 200);
+//
+//
+//		HAL_Delay(200);
+//
+//
+//
+//		MotorControl_MoveToADC(MOTOR_1, MID_POS);
+//		MotorControl_MoveToADC(MOTOR_2, MID_POS);
+//
+//		HAL_Delay(200);
+//
+//		MotorControl_MoveToADC(MOTOR_1, MIN_POS);
+//		MotorControl_MoveToADC(MOTOR_2, MIN_POS);
+//
+//		HAL_Delay(200);
+//
+//		MotorControl_MoveToADC(MOTOR_1, MAX_POS);
+//		MotorControl_MoveToADC(MOTOR_2, MAX_POS);
+//
+//		HAL_Delay(200);
+//
 
 
         if (uart_command_is_ready()) {
@@ -196,7 +225,6 @@ int main(void)
 			Test_Run();
 			break;
 		case 1:
-			Stop_test();
 			break;
 
 		case 2:
@@ -227,7 +255,7 @@ int main(void)
 		    uint16_t targetPOS =
 		        (uint16_t)(((uint32_t)cmd_int * MAX_POS) / 100U);
 
-		    MotorControl_MoveToADC(MOTOR_1, targetPOS);
+		    MotorControl_MoveToADC(MOTOR_1, targetPOS,);
 
 		    g_test_is_running = 1;
 		    break;

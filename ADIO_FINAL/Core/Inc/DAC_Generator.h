@@ -8,7 +8,7 @@
 #ifndef INC_DAC_GENERATOR_H_
 #define INC_DAC_GENERATOR_H_
 
-#define DAC_MAX_VAL     4095  // 12-bit DAC maximum value
+#define DAC_MAX_VAL 4095  // 12-bit DAC maximum value
 #define DAC_MIN_VAL 0
 
 #include "stm32f4xx_hal.h"

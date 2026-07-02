@@ -35,7 +35,7 @@ void MotorControl_Abort(Motor_ID_t motor);
  * moveMotorXToADCValue
  */
 void MotorControl_MoveToADC(Motor_ID_t motor,
-                            uint16_t targetPOS);
+                            uint16_t targetPOS, uint16_t targetADC);
 
 /* ================= Smoothness ================= */
 /* Maps from:
@@ -44,6 +44,7 @@ void MotorControl_MoveToADC(Motor_ID_t motor,
 void MotorControl_MoveAndMeasureSmoothness(
         Motor_ID_t motor,
         uint16_t targetPOS,
+		uint16_t targetADC,
         uint32_t expected_duration_ms,
         int32_t *max_error_out);
 
@@ -61,9 +62,9 @@ float MotorControl_GetSmoothness_MinToMax(Motor_ID_t motor);
 float MotorControl_GetSmoothness_MaxToMin(Motor_ID_t motor);
 
 extern uint16_t volatile Pot1_2[2];
-#define MIN_POS 0U
+#define MIN_POS 200U
 #define MID_POS 2048U
-#define MAX_POS 4095U
+#define MAX_POS 3900U
 
 
 #endif
