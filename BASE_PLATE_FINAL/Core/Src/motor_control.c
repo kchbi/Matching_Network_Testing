@@ -22,7 +22,7 @@
 static float Kp = 1.2f;    //1.2f
 static float Ki = 10.0f;   //5.0f
 static float Kd = 0.3f;
-#define BANDPWM 4200
+#define BANDPWM 3200
 
 /* ================= PID STATE ================= */
 

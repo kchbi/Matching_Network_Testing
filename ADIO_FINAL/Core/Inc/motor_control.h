@@ -62,9 +62,9 @@ float MotorControl_GetSmoothness_MinToMax(Motor_ID_t motor);
 float MotorControl_GetSmoothness_MaxToMin(Motor_ID_t motor);
 
 extern uint16_t volatile Pot1_2[2];
-#define MIN_POS 200U
+#define MIN_POS 0U
 #define MID_POS 2048U
-#define MAX_POS 3900U
+#define MAX_POS 4095U
 
 
 #endif

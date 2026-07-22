@@ -143,39 +143,6 @@ int main(void)
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 2048);
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 2048);
-//
-//		HAL_Delay(200);
-//
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 3800);
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 3800);
-//
-//		HAL_Delay(200);
-//
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_1, 200);
-//		DACGenerator_Start(&hdac, DAC_CHANNEL_2, 200);
-//
-//
-//		HAL_Delay(200);
-//
-//
-//
-//		MotorControl_MoveToADC(MOTOR_1, MID_POS);
-//		MotorControl_MoveToADC(MOTOR_2, MID_POS);
-//
-//		HAL_Delay(200);
-//
-//		MotorControl_MoveToADC(MOTOR_1, MIN_POS);
-//		MotorControl_MoveToADC(MOTOR_2, MIN_POS);
-//
-//		HAL_Delay(200);
-//
-//		MotorControl_MoveToADC(MOTOR_1, MAX_POS);
-//		MotorControl_MoveToADC(MOTOR_2, MAX_POS);
-//
-//		HAL_Delay(200);
-//
 
 
         if (uart_command_is_ready()) {
@@ -253,9 +220,15 @@ int main(void)
 		    if (cmd_int > 100) cmd_int = 100;
 
 		    uint16_t targetPOS =
-		        (uint16_t)(((uint32_t)cmd_int * MAX_POS) / 100U);
+		        (uint16_t)(((uint32_t)cmd_int * 4095U) / 100U);
+		    if (targetPOS < 409){
+		    	targetPOS = 410;
+		    }
+		    if (targetPOS > 3685){
+		    	targetPOS = 3684;
+		    }
 
-		    MotorControl_MoveToADC(MOTOR_1, targetPOS,);
+		    Motor_Set(MOTOR_1, targetPOS);
 
 		    g_test_is_running = 1;
 		    break;
@@ -266,9 +239,16 @@ int main(void)
 		    if (cmd_int > 100) cmd_int = 100;
 
 		    uint16_t targetPOS =
-		        (uint16_t)(((uint32_t)cmd_int * MAX_POS) / 100U);
+		        (uint16_t)(((uint32_t)cmd_int * 4095U) / 100U);
 
-		    MotorControl_MoveToADC(MOTOR_2, targetPOS);
+		    if (targetPOS < 409){
+		    	targetPOS = 410;
+		    }
+		    if (targetPOS > 3685){
+		    	targetPOS= 3684;
+		    }
+
+		    Motor_Set(MOTOR_2, targetPOS);
 
 		    g_test_is_running = 1;
 		    break;
@@ -661,7 +641,6 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 

@@ -10,12 +10,12 @@
 #include <stdint.h>
 #include "stm32f4xx_hal.h"
 
-#define RELAY1_PIN   GPIO_PIN_0
-#define RELAY2_PIN   GPIO_PIN_1
-#define RELAY3_PIN   GPIO_PIN_2
+#define RELAY1_PIN   GPIO_PIN_9
+#define RELAY2_PIN   GPIO_PIN_11
+#define RELAY3_PIN   GPIO_PIN_12
 #define RELAY4_PIN   GPIO_PIN_3
 
-#define RELAY_GPIO_PORT GPIOC
+#define RELAY_GPIO_PORT GPIOA
 
 typedef enum {
     RELAY_ON,

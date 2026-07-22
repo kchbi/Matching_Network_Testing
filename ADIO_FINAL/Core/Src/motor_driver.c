@@ -30,11 +30,11 @@ void Motor_Set(Motor_ID_t motor, uint16_t command)
     switch(motor)
     {
         case MOTOR_1:
-            DACGenerator_Start(&hdac, DAC_CHANNEL_1, command);
+            DACGenerator_Start(&hdac, DAC_CHANNEL_2, command);
             break;
 
         case MOTOR_2:
-            DACGenerator_Start(&hdac, DAC_CHANNEL_2, command);
+            DACGenerator_Start(&hdac, DAC_CHANNEL_1, command);
             break;
 
         default:
