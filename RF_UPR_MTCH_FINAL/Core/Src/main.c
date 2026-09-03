@@ -147,11 +147,12 @@ int main(void)
 //		    Motor_Set(MOTOR_1, i);
 //		    HAL_Delay(50);
 //		}
-		Motor_Set(MOTOR1,3200);
+//
 
 		/* ================================================================
 		 * SECTION 1: UART COMMAND HANDLING (PRODUCER–CONSUMER)
 		 * ================================================================ */
+
 
 
         if (uart_command_is_ready()) {
@@ -226,8 +227,8 @@ int main(void)
 
 		case 6:   // CMD:SET_M1 <0..100>
 		{
-		    if (cmd_int < 0)   cmd_int = 0;
-		    if (cmd_int > 100) cmd_int = 100;
+		    if (cmd_int < 10)   cmd_int = 10;
+		    if (cmd_int > 90) cmd_int = 90;
 		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_1);
 
 		    uint16_t targetADC =
@@ -242,8 +243,8 @@ int main(void)
 
 		case 7:   // CMD:SET_M2 <0..100>
 		{
-		    if (cmd_int < 0)   cmd_int = 0;
-		    if (cmd_int > 100) cmd_int = 100;
+		    if (cmd_int < 10)   cmd_int = 10;
+		    if (cmd_int > 90) cmd_int = 90;
 		    MotorCalibration_t *cal = MotorControl_GetCalibration(MOTOR_2);
 		    uint16_t targetADC =
 		        cal->adc_min +
